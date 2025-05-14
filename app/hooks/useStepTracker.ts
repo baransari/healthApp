@@ -1,36 +1,62 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Platform } from 'react-native';
-// Redux hooks'ları özelleştirilmiş tiplerle doğrudan import ediyoruz
-import { useDispatch, useSelector } from 'react-redux';
+// Redux imports
+import * as ReactRedux from 'react-redux';
 import { RootState, AppDispatch } from '../store';
 import { setDailySteps, updateStepGoal, setIsStepAvailable } from '../store/stepTrackerSlice';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Type-safe hooks oluşturuyoruz
-const useAppDispatch = () => useDispatch<AppDispatch>();
-const useAppSelector = useSelector as (selector: (state: RootState) => any) => any;
+// Extract hooks from ReactRedux
+const useDispatch = ReactRedux.useDispatch;
+const useSelector = ReactRedux.useSelector;
 
-// Depolama anahtarları
+// Type-safe hooks
+const useAppDispatch = () => useDispatch<AppDispatch>();
+const useAppSelector: <T>(selector: (state: RootState) => T) => T = useSelector;
+
+// Storage keys
 const STORAGE_KEYS = {
   STEP_GOAL: '@HealthTrackAI:stepGoal',
 };
 
-// Varsayılan günlük adım hedefi
+// Default daily step goal
 const DEFAULT_STEP_GOAL = 10000;
 
-// Pedometer tipi tanımlaması
+// Pedometer type definitions
+interface PedometerResult {
+  steps: number;
+}
+
+interface Subscription {
+  remove: () => void;
+}
+
 interface Pedometer {
   isAvailableAsync: () => Promise<boolean>;
   getStepCountAsync: (start: Date, end: Date) => Promise<PedometerResult>;
   watchStepCount: (callback: (result: PedometerResult) => void) => Subscription;
 }
 
-// Pedometer modülünü import et veya mock oluştur
-let Pedometer: Pedometer;
+// Import Pedometer or create a mock if unavailable
+let Pedometer: Pedometer | null = null;
+
+// Safely import Pedometer module
 try {
-  Pedometer = require('expo-sensors').Pedometer;
-} catch {
-  console.log('Pedometer modülü bulunamadı, simülasyon modu kullanılacak');
+  // Import Expo Sensors explicitly with require
+  const ExpoSensors = require('expo-sensors');
+  // Check if Pedometer exists in the module
+  if (ExpoSensors && ExpoSensors.Pedometer) {
+    Pedometer = ExpoSensors.Pedometer;
+  } else {
+    console.warn('Pedometer not found in expo-sensors');
+  }
+} catch (error) {
+  console.warn('Failed to import Pedometer from expo-sensors:', error);
+}
+
+// Create mock/simulation if Pedometer is not available
+if (!Pedometer) {
+  console.log('Using simulated Pedometer');
   Pedometer = {
     isAvailableAsync: async () => false,
     getStepCountAsync: async () => ({ steps: 0 }),
@@ -38,30 +64,20 @@ try {
   };
 }
 
-// Pedometer result tipi
-interface PedometerResult {
-  steps: number;
-}
-
-// Subscription tipi
-interface Subscription {
-  remove: () => void;
-}
-
-// Simülasyon adım üretici
+// Step simulator for devices without pedometer
 class StepSimulator {
   private steps: number = 0;
   private callbacks: ((steps: number) => void)[] = [];
   private timer: ReturnType<typeof setInterval> | null = null;
 
   start() {
-    // Rastgele adım üret (her 5-10 saniyede bir)
+    // Generate random steps (every 5-10 seconds)
     this.timer = setInterval(() => {
-      // 10-30 arası rastgele adım ekle
+      // Add 10-30 random steps
       const newSteps = Math.floor(Math.random() * 20) + 10;
       this.steps += newSteps;
 
-      // Callback'leri çağır
+      // Call all callbacks
       this.callbacks.forEach(callback => callback(this.steps));
     }, Math.random() * 5000 + 5000);
   }
@@ -91,10 +107,10 @@ class StepSimulator {
   }
 }
 
-// Simülatör örneği oluştur
+// Create step simulator instance
 const stepSimulator = new StepSimulator();
 
-// Başlangıç ve bitiş zamanını hesapla (bugünün başlangıcı ve sonu)
+// Calculate start and end time (beginning and end of today)
 const getStartAndEndTime = () => {
   const end = new Date();
   const start = new Date();
@@ -106,12 +122,12 @@ const getStartAndEndTime = () => {
 export default function useStepTracker() {
   const dispatch = useAppDispatch();
 
-  // Redux state'inden adım verilerini çekme
+  // Get step data from Redux state
   const { dailySteps, stepGoal, isStepAvailable } = useAppSelector(
-    (state: RootState) => state.stepTracker,
+    (state: RootState) => state.stepTracker
   );
 
-  // AsyncStorage'dan adım hedefini yükle
+  // Load step goal from AsyncStorage
   useEffect(() => {
     const loadStepGoal = async () => {
       try {
@@ -120,24 +136,24 @@ export default function useStepTracker() {
           dispatch(updateStepGoal(parseInt(savedGoal, 10)));
         }
       } catch (error) {
-        console.error('Step goal yüklenirken hata oluştu:', error);
+        console.error('Error loading step goal:', error);
       }
     };
 
     loadStepGoal();
   }, [dispatch]);
 
-  // Sensor'un kullanılabilir olup olmadığını kontrol et
+  // Check if sensor is available
   useEffect(() => {
     const checkAvailability = async () => {
       try {
         if (!Pedometer) {
           dispatch(setIsStepAvailable(false));
-          console.log('Pedometer modülü bulunamadı, simülasyon modu aktif.');
+          console.log('Pedometer module not found, simulation mode active.');
 
-          // Simülasyon modunu başlat ve redux'a bir miktar adım ekle
+          // Start simulation mode and add some random steps to redux
           stepSimulator.start();
-          dispatch(setDailySteps(Math.floor(Math.random() * 2000) + 3000)); // 3000-5000 arası rastgele adım
+          dispatch(setDailySteps(Math.floor(Math.random() * 2000) + 3000)); // Random steps between 3000-5000
           return;
         }
 
@@ -146,29 +162,29 @@ export default function useStepTracker() {
         console.log('Pedometer availability:', isAvailable);
 
         if (!isAvailable) {
-          // Sensör yoksa simülasyon modunu başlat
+          // Start simulation mode if sensor is not available
           stepSimulator.start();
-          dispatch(setDailySteps(Math.floor(Math.random() * 2000) + 3000)); // 3000-5000 arası rastgele adım
+          dispatch(setDailySteps(Math.floor(Math.random() * 2000) + 3000)); // Random steps between 3000-5000
         }
       } catch (error) {
         console.error('Error checking pedometer:', error);
         dispatch(setIsStepAvailable(false));
 
-        // Hata durumunda simülasyon modunu başlat
+        // Start simulation mode in case of error
         stepSimulator.start();
-        dispatch(setDailySteps(Math.floor(Math.random() * 2000) + 3000)); // 3000-5000 arası rastgele adım
+        dispatch(setDailySteps(Math.floor(Math.random() * 2000) + 3000)); // Random steps between 3000-5000
       }
     };
 
     checkAvailability();
 
-    // Component unmount olduğunda simülatörü durdur
+    // Stop simulator when component unmounts
     return () => {
       stepSimulator.stop();
     };
   }, [dispatch]);
 
-  // Günlük adım sayısını izle (Pedometer mevcutsa)
+  // Track daily steps (if Pedometer is available)
   useEffect(() => {
     if (!isStepAvailable || !Pedometer) return;
 
@@ -179,18 +195,18 @@ export default function useStepTracker() {
 
     const trackSteps = async () => {
       try {
-        // Bugünün adım sayısını al
+        // Get today's step count
         const result = await Pedometer.getStepCountAsync(start, end);
         dispatch(setDailySteps(result.steps));
         console.log('Daily steps:', result.steps);
-        retryCount = 0; // Başarılı olursa retry sayısını sıfırla
+        retryCount = 0; // Reset retry count on success
 
-        // Gerçek zamanlı adım takibi başlat
+        // Start real-time step tracking
         subscription = Pedometer.watchStepCount((result: PedometerResult) => {
           console.log('Steps detected:', result.steps);
           const { start: newStart, end: newEnd } = getStartAndEndTime();
 
-          // Günlük toplam adım sayısını getir
+          // Get total daily step count
           Pedometer.getStepCountAsync(newStart, newEnd)
             .then((data: PedometerResult) => {
               dispatch(setDailySteps(data.steps));
@@ -202,23 +218,23 @@ export default function useStepTracker() {
       } catch (error) {
         console.error('Error tracking steps:', error);
         
-        // Hata durumunda belirli sayıda tekrar dene
+        // Retry on error a limited number of times
         if (retryCount < MAX_RETRIES) {
           retryCount++;
           console.log(`Retrying pedometer connection (${retryCount}/${MAX_RETRIES})...`);
-          setTimeout(trackSteps, 2000); // 2 saniye sonra tekrar dene
+          setTimeout(trackSteps, 2000); // Try again after 2 seconds
         } else {
           console.log('Max retries reached, switching to simulation mode');
           dispatch(setIsStepAvailable(false));
           stepSimulator.start();
-          dispatch(setDailySteps(Math.floor(Math.random() * 2000) + 3000)); // 3000-5000 arası rastgele adım
+          dispatch(setDailySteps(Math.floor(Math.random() * 2000) + 3000)); // Random steps between 3000-5000
         }
       }
     };
 
     trackSteps();
 
-    // Component unmount olduğunda subscription'ı temizle
+    // Clean up subscription when component unmounts
     return () => {
       if (subscription) {
         subscription.remove();
@@ -226,11 +242,11 @@ export default function useStepTracker() {
     };
   }, [dispatch, isStepAvailable]);
 
-  // Simülasyon modu için adım sayısı güncelleme (sensör yoksa)
+  // Update step count from simulation (if sensor is not available)
   useEffect(() => {
     if (isStepAvailable || !stepSimulator) return;
 
-    // Simülasyondan adım güncellemelerini dinle
+    // Listen for step updates from simulator
     const subscription = stepSimulator.registerCallback(steps => {
       dispatch(setDailySteps(steps));
     });
@@ -240,22 +256,22 @@ export default function useStepTracker() {
     };
   }, [dispatch, isStepAvailable]);
 
-  // Adım hedefini güncelleme - callback ile optimize et
+  // Update step goal - optimized with callback
   const updateGoal = useCallback(async (newGoal: number) => {
     try {
       dispatch(updateStepGoal(newGoal));
       await AsyncStorage.setItem(STORAGE_KEYS.STEP_GOAL, newGoal.toString());
     } catch (error) {
-      console.error('Adım hedefi kaydedilirken hata oluştu:', error);
+      console.error('Error saving step goal:', error);
     }
   }, [dispatch]);
 
-  // Manuel olarak adım ekle (simülasyon modu için)
+  // Manually add steps (for simulation mode)
   const addSteps = useCallback((steps: number) => {
     dispatch(setDailySteps(dailySteps + steps));
   }, [dispatch, dailySteps]);
 
-  // Adım yüzdesini hesapla
+  // Calculate step percentage
   const calculateStepPercentage = useCallback((): number => {
     if (!stepGoal) return 0;
     return Math.min(Math.round((dailySteps / stepGoal) * 100), 100);

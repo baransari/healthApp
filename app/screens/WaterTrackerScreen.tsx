@@ -195,9 +195,9 @@ const WaterTrackerScreen: React.FC<WaterTrackerScreenProps> = ({ navigation }) =
                 (a: WaterEntry, b: WaterEntry) =>
                   new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
               )
-              .map((entry: WaterEntry) => (
+              .map((entry: WaterEntry, index: number) => (
                 <View
-                  key={entry.id}
+                  key={`water-entry-${entry.id}-${index}`}
                   style={[styles.entryItem, { borderBottomColor: theme.colors.surfaceVariant }]}
                 >
                   <View style={styles.entryInfo}>

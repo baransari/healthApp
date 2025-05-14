@@ -34,13 +34,14 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { useUser } from '../context/UserContext';
 import type { ExtendedMD3Theme } from '../types';
-// Redux hooks'ları özelleştirilmiş tiplerle doğrudan import ediyoruz
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState, AppDispatch } from '../store';
+// Redux imports - correct imports
+import { useSelector, useDispatch } from 'react-redux';
+import type { RootState, AppDispatch } from '../store';
 
-// Type-safe hooks oluşturuyoruz
+// Type-safe hooks definition
 const useAppDispatch = () => useDispatch<AppDispatch>();
-const useAppSelector = useSelector as (selector: (state: RootState) => any) => any;
+const useAppSelector = <T extends unknown>(selector: (state: RootState) => T): T => 
+  useSelector<RootState, T>(selector);
 
 // Create a simple tab param list for StepTracker
 type StepTabParamList = {
