@@ -34,14 +34,8 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { useUser } from '../context/UserContext';
 import type { ExtendedMD3Theme } from '../types';
-// Redux imports - correct imports
-import { useSelector, useDispatch } from 'react-redux';
-import type { RootState, AppDispatch } from '../store';
-
-// Type-safe hooks definition
-const useAppDispatch = () => useDispatch<AppDispatch>();
-const useAppSelector = <T extends unknown>(selector: (state: RootState) => T): T => 
-  useSelector<RootState, T>(selector);
+// Redux imports - use standard import from index
+import store from '../store';
 
 // Create a simple tab param list for StepTracker
 type StepTabParamList = {
@@ -65,10 +59,28 @@ const StepTrackerScreen: React.FC<StepTrackerScreenProps> = ({ navigation }) => 
   const [stepsToAdd, setStepsToAdd] = useState<number>(500);
 
   // useStepTracker hook kullanımı
-  const { dailySteps, stepGoal, isStepAvailable, updateGoal, addSteps, stepPercentage } =
+  const { dailySteps, stepGoal, isStepAvailable, updateGoal, addSteps, stepPercentage, error } =
     useStepTracker();
 
   const { user } = useUser();
+
+  // Kritik hata durumunda uygun mesaj göster
+  if (error) {
+    return (
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <View style={[styles.header, { backgroundColor: theme.colors.primary }]}>
+          <Text style={styles.headerTitle}>Adım Takibi</Text>
+        </View>
+        <View style={styles.errorContainer}>
+          <FontAwesomeIcon icon={faCircleExclamation} size={48} color={theme.colors.error} />
+          <Title style={{ color: theme.colors.error, marginTop: 16 }}>Adım Takibi Hatası</Title>
+          <Paragraph style={{ textAlign: 'center', marginTop: 8 }}>
+            Adım takibi modülünde kritik bir sorun oluştu. Lütfen uygulamayı yeniden başlatın.
+          </Paragraph>
+        </View>
+      </View>
+    );
+  }
 
   // Adım hedefini güncelle
   const handleUpdateGoal = () => {
@@ -552,6 +564,11 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 20,
     right: 20,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
