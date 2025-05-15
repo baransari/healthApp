@@ -21,9 +21,9 @@ import {
   Divider as PaperDivider,
   Avatar,
   Surface,
-  useTheme,
   Title as PaperTitle,
   Paragraph as PaperParagraph,
+  Chip,
 } from '../utils/paperComponents';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { IconProp } from '@fortawesome/fontawesome-svg-core';
@@ -61,6 +61,7 @@ import { useAppSelector } from '../store';
 import { RootState } from '../store';
 import LoadingComponent from '../components/LoadingComponent';
 import { StylesType, User, UserContextType } from '../types';
+import useTheme from '../hooks/useTheme';
 
 // Custom Title component
 interface TitleProps {
@@ -205,7 +206,7 @@ const ProfileScreen: React.FunctionComponent<ProfileScreenProps> = () => {
   const { user, updateUser } = useUser() as UserContextType;
   const navigation = useNavigation<ProfileScreenNavigationProp>();
   const { logout } = useAuth();
-  const theme = useTheme();
+  const { theme, isDarkMode } = useTheme();
   const themeAsAny = theme as any;
   const { colors } = theme;
 
@@ -326,8 +327,37 @@ const ProfileScreen: React.FunctionComponent<ProfileScreenProps> = () => {
   }
 
   const renderProfileInfo = () => (
-    <PaperCard style={[styles.card, { backgroundColor: themeAsAny.colors.surface }]}>
-      <PaperCard.Content>
+    <PaperCard style={[styles.card, { 
+      backgroundColor: isDarkMode ? '#1E1E2E' : themeAsAny.colors.surface,
+      borderRadius: 24,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 12,
+      elevation: 8,
+      margin: 16,
+      overflow: 'hidden'
+    }]}>
+      <PaperCard.Content style={styles.cardContent}>
+        <View style={styles.sectionTitleContainer}>
+          <View style={{
+            backgroundColor: `${themeAsAny.colors.primary}20`,
+            width: 50, 
+            height: 50, 
+            borderRadius: 25,
+            justifyContent: 'center',
+            alignItems: 'center',
+            shadowColor: themeAsAny.colors.primary,
+            shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.2,
+            shadowRadius: 4,
+            elevation: 3
+          }}>
+            <FontAwesomeIcon icon={faUserEdit as IconProp} size={24} color={themeAsAny.colors.primary} />
+          </View>
+          <Text style={[styles.cardTitle, { color: themeAsAny.colors.onSurface }]}>Kullanıcı Bilgileri</Text>
+        </View>
+
         <View style={styles.profileHeader}>
           <TouchableOpacity
             style={styles.avatarContainer}
@@ -348,20 +378,16 @@ const ProfileScreen: React.FunctionComponent<ProfileScreenProps> = () => {
             </View>
           </TouchableOpacity>
           <View style={styles.profileInfo}>
-            <PaperTitle style={{ fontWeight: 'bold' }}>{user.name}</PaperTitle>
-            <PaperParagraph style={{ color: '#666' }}>{user.email}</PaperParagraph>
-            <PaperButton
-              mode="contained"
-              style={styles.editButton}
-              labelStyle={styles.editButtonLabel}
-              buttonColor={themeAsAny.colors.primary}
-              icon={({ size, color }: { size: number; color: string }) => (
-                <FontAwesomeIcon icon={faUserEdit as IconProp} size={size} color={color} />
-              )}
-              onPress={() => openEditModal()}
+            <Text style={[styles.profileName, { color: themeAsAny.colors.onSurface }]}>{user.name}</Text>
+            <Text style={[styles.profileEmail, { color: themeAsAny.colors.onSurfaceVariant }]}>{user.email}</Text>
+            
+            <TouchableOpacity
+              style={[styles.editProfileButton, { backgroundColor: themeAsAny.colors.primary }]}
+              onPress={openEditModal}
             >
-              Profili Düzenle
-            </PaperButton>
+              <FontAwesomeIcon icon={faUserEdit as IconProp} size={16} color="#FFFFFF" style={{ marginRight: 8 }} />
+              <Text style={styles.editProfileButtonText}>Profili Düzenle</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </PaperCard.Content>
@@ -390,53 +416,97 @@ const ProfileScreen: React.FunctionComponent<ProfileScreenProps> = () => {
     };
 
     return (
-      <PaperCard style={[styles.card, { backgroundColor: themeAsAny.colors.surface }]}>
-        <PaperCard.Content>
-          <PaperTitle style={styles.sectionTitle}>Sağlık Metrikleri</PaperTitle>
+      <PaperCard style={[styles.card, { 
+        backgroundColor: isDarkMode ? '#1E1E2E' : themeAsAny.colors.surface,
+        borderRadius: 24,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 12,
+        elevation: 8,
+        margin: 16,
+        overflow: 'hidden'
+      }]}>
+        <PaperCard.Content style={styles.cardContent}>
+          <View style={styles.sectionTitleContainer}>
+            <View style={{
+              backgroundColor: `${themeAsAny.colors.primary}20`,
+              width: 50, 
+              height: 50, 
+              borderRadius: 25,
+              justifyContent: 'center',
+              alignItems: 'center',
+              shadowColor: themeAsAny.colors.primary,
+              shadowOffset: { width: 0, height: 3 },
+              shadowOpacity: 0.2,
+              shadowRadius: 4,
+              elevation: 3
+            }}>
+              <FontAwesomeIcon icon={faWeightScale as IconProp} size={24} color={themeAsAny.colors.primary} />
+            </View>
+            <Text style={[styles.cardTitle, { color: themeAsAny.colors.onSurface }]}>Sağlık Metrikleri</Text>
+          </View>
 
           <View style={styles.metricsContainer}>
-            <View style={styles.metricItem}>
-              <View style={styles.metricIconContainer}>
+            <View style={[styles.metricItem, { 
+              backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.07)' : 'rgba(66, 133, 244, 0.05)',
+              borderRadius: 16,
+              padding: 16,
+            }]}>
+              <View style={[styles.metricIconContainer, { backgroundColor: '#4285F4' }]}>
                 <FontAwesomeIcon icon={faWeightScale as IconProp} size={24} color="#FFFFFF" />
               </View>
-              <Text style={styles.metricValue}>{user.weight} kg</Text>
-              <Text style={styles.metricLabel}>Kilo</Text>
+              <Text style={[styles.metricValue, { color: themeAsAny.colors.onSurface }]}>{user.weight} kg</Text>
+              <Text style={[styles.metricLabel, { color: themeAsAny.colors.onSurfaceVariant }]}>Kilo</Text>
             </View>
-            <View style={styles.metricItem}>
-              <View style={styles.metricIconContainer}>
+            <View style={[styles.metricItem, { 
+              backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.07)' : 'rgba(76, 175, 80, 0.05)',
+              borderRadius: 16,
+              padding: 16,
+            }]}>
+              <View style={[styles.metricIconContainer, { backgroundColor: '#4CAF50' }]}>
                 <FontAwesomeIcon icon={faRulerVertical as IconProp} size={24} color="#FFFFFF" />
               </View>
-              <Text style={styles.metricValue}>{user.height} cm</Text>
-              <Text style={styles.metricLabel}>Boy</Text>
+              <Text style={[styles.metricValue, { color: themeAsAny.colors.onSurface }]}>{user.height} cm</Text>
+              <Text style={[styles.metricLabel, { color: themeAsAny.colors.onSurfaceVariant }]}>Boy</Text>
             </View>
-            <View style={styles.metricItem}>
-              <View style={styles.metricIconContainer}>
+            <View style={[styles.metricItem, { 
+              backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.07)' : 'rgba(255, 152, 0, 0.05)',
+              borderRadius: 16,
+              padding: 16,
+            }]}>
+              <View style={[styles.metricIconContainer, { backgroundColor: '#FF9800' }]}>
                 <FontAwesomeIcon icon={faCake as IconProp} size={24} color="#FFFFFF" />
               </View>
-              <Text style={styles.metricValue}>{user.age}</Text>
-              <Text style={styles.metricLabel}>Yaş</Text>
+              <Text style={[styles.metricValue, { color: themeAsAny.colors.onSurface }]}>{user.age}</Text>
+              <Text style={[styles.metricLabel, { color: themeAsAny.colors.onSurfaceVariant }]}>Yaş</Text>
             </View>
           </View>
 
-          <PaperDivider style={styles.divider} />
+          <PaperDivider style={[styles.divider, { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)' }]} />
 
           {/* Sleep data section */}
-          <View style={styles.sleepContainer}>
+          <View style={[styles.sleepContainer, { 
+            backgroundColor: isDarkMode ? 'rgba(63, 81, 181, 0.1)' : 'rgba(63, 81, 181, 0.05)',
+            borderRadius: 16,
+            marginVertical: 16,
+            padding: 16,
+          }]}>
             <View style={styles.sleepHeaderContainer}>
-              <View style={styles.sleepIconContainer}>
+              <View style={[styles.sleepIconContainer, { backgroundColor: '#3F51B5' }]}>
                 <FontAwesomeIcon icon={faBed as IconProp} size={24} color="#FFFFFF" />
               </View>
-              <Text style={styles.sleepHeaderTitle}>Uyku Verileri</Text>
+              <Text style={[styles.sleepHeaderTitle, { color: themeAsAny.colors.onSurface }]}>Uyku Verileri</Text>
             </View>
 
             <View style={styles.sleepDetailsContainer}>
               <View style={styles.sleepDetail}>
-                <Text style={styles.sleepDetailLabel}>Son Uyku:</Text>
-                <Text style={styles.sleepDetailValue}>{sleepHours.toFixed(1)} saat</Text>
+                <Text style={[styles.sleepDetailLabel, { color: themeAsAny.colors.onSurfaceVariant }]}>Son Uyku:</Text>
+                <Text style={[styles.sleepDetailValue, { color: themeAsAny.colors.onSurface }]}>{sleepHours.toFixed(1)} saat</Text>
               </View>
 
               <View style={styles.sleepDetail}>
-                <Text style={styles.sleepDetailLabel}>Kalite:</Text>
+                <Text style={[styles.sleepDetailLabel, { color: themeAsAny.colors.onSurfaceVariant }]}>Kalite:</Text>
                 <View
                   style={[
                     styles.sleepQualityBadge,
@@ -456,8 +526,8 @@ const ProfileScreen: React.FunctionComponent<ProfileScreenProps> = () => {
               </View>
 
               <View style={styles.sleepDetail}>
-                <Text style={styles.sleepDetailLabel}>Hedef:</Text>
-                <Text style={styles.sleepDetailValue}>
+                <Text style={[styles.sleepDetailLabel, { color: themeAsAny.colors.onSurfaceVariant }]}>Hedef:</Text>
+                <Text style={[styles.sleepDetailValue, { color: themeAsAny.colors.onSurface }]}>
                   {sleepTracker?.sleepGoal || user.sleepGoal || 8} saat
                 </Text>
               </View>
@@ -472,18 +542,18 @@ const ProfileScreen: React.FunctionComponent<ProfileScreenProps> = () => {
             </TouchableOpacity>
           </View>
 
-          <PaperDivider style={styles.divider} />
+          <PaperDivider style={[styles.divider, { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)' }]} />
 
           <View style={styles.bmiContainer}>
             <View style={styles.bmiInfo}>
-              <Text style={styles.bmiLabel}>Vücut Kitle İndeksi (BMI)</Text>
-              <Text style={styles.bmiValue}>{bmi?.toFixed(1) || '-'}</Text>
+              <Text style={[styles.bmiLabel, { color: themeAsAny.colors.onSurfaceVariant }]}>Vücut Kitle İndeksi (BMI)</Text>
+              <Text style={[styles.bmiValue, { color: themeAsAny.colors.onSurface }]}>{bmi?.toFixed(1) || '-'}</Text>
               <Text style={[styles.bmiCategory, { color: getBMICategory().color }]}>
                 {getBMICategory().category}
               </Text>
             </View>
             <View style={styles.bmiGaugeContainer}>
-              <View style={styles.bmiGauge}>
+              <View style={[styles.bmiGauge, { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)' }]}>
                 <View style={styles.bmiGaugeSegment1} />
                 <View style={styles.bmiGaugeSegment2} />
                 <View style={styles.bmiGaugeSegment3} />
@@ -503,24 +573,36 @@ const ProfileScreen: React.FunctionComponent<ProfileScreenProps> = () => {
                 />
               </View>
               <View style={styles.bmiLegend}>
-                <Text style={styles.bmiLegendText}>Zayıf</Text>
-                <Text style={styles.bmiLegendText}>Normal</Text>
-                <Text style={styles.bmiLegendText}>Kilolu</Text>
-                <Text style={styles.bmiLegendText}>Obez</Text>
+                <Text style={[styles.bmiLegendText, { color: themeAsAny.colors.onSurfaceVariant }]}>Zayıf</Text>
+                <Text style={[styles.bmiLegendText, { color: themeAsAny.colors.onSurfaceVariant }]}>Normal</Text>
+                <Text style={[styles.bmiLegendText, { color: themeAsAny.colors.onSurfaceVariant }]}>Kilolu</Text>
+                <Text style={[styles.bmiLegendText, { color: themeAsAny.colors.onSurfaceVariant }]}>Obez</Text>
               </View>
             </View>
 
-            <View style={styles.calorieInfoContainer}>
+            <View style={[styles.calorieInfoContainer, {
+              backgroundColor: isDarkMode ? 'rgba(255, 152, 0, 0.1)' : 'rgba(255, 152, 0, 0.05)',
+              borderRadius: 16, 
+              padding: 16,
+              marginTop: 16,
+            }]}>
               <View style={styles.calorieInfo}>
                 <FontAwesomeIcon icon={faFire as IconProp} size={20} color="#FF9800" />
                 <View style={styles.calorieTextContainer}>
-                  <Text style={styles.calorieLabel}>Günlük Kalori İhtiyacı</Text>
-                  <Text style={styles.calorieValue}>{calculateDailyCalorieNeeds()} kalori</Text>
+                  <Text style={[styles.calorieLabel, { color: themeAsAny.colors.onSurfaceVariant }]}>Günlük Kalori İhtiyacı</Text>
+                  <Text style={[styles.calorieValue, { color: themeAsAny.colors.onSurface }]}>{calculateDailyCalorieNeeds()} kalori</Text>
                 </View>
               </View>
-              <TouchableOpacity style={styles.calorieDetailsButton}>
+              <TouchableOpacity 
+                style={[styles.calorieDetailsButton, {
+                  backgroundColor: '#FF9800',
+                  borderRadius: 8,
+                  paddingVertical: 6,
+                  paddingHorizontal: 12,
+                }]}
+              >
                 <Text style={styles.calorieDetailsButtonText}>Detaylar</Text>
-                <FontAwesomeIcon icon={faChevronRight as IconProp} size={16} color="#4285F4" />
+                <FontAwesomeIcon icon={faChevronRight as IconProp} size={16} color="#FFF" />
               </TouchableOpacity>
             </View>
           </View>
@@ -530,35 +612,77 @@ const ProfileScreen: React.FunctionComponent<ProfileScreenProps> = () => {
   };
 
   const renderGoalsAndActivity = () => (
-    <PaperCard style={[styles.card, { backgroundColor: themeAsAny.colors.surface }]}>
-      <PaperCard.Content>
-        <PaperTitle style={styles.sectionTitle}>Hedefler ve Aktivite</PaperTitle>
+    <PaperCard style={[styles.card, { 
+      backgroundColor: isDarkMode ? '#1E1E2E' : themeAsAny.colors.surface,
+      borderRadius: 24,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 12,
+      elevation: 8,
+      margin: 16,
+      overflow: 'hidden'
+    }]}>
+      <PaperCard.Content style={styles.cardContent}>
+        <View style={styles.sectionTitleContainer}>
+          <View style={{
+            backgroundColor: `${themeAsAny.colors.primary}20`,
+            width: 50, 
+            height: 50, 
+            borderRadius: 25,
+            justifyContent: 'center',
+            alignItems: 'center',
+            shadowColor: themeAsAny.colors.primary,
+            shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.2,
+            shadowRadius: 4,
+            elevation: 3
+          }}>
+            <FontAwesomeIcon icon={faFlag as IconProp} size={24} color={themeAsAny.colors.primary} />
+          </View>
+          <Text style={[styles.cardTitle, { color: themeAsAny.colors.onSurface }]}>Hedefler ve Aktivite</Text>
+        </View>
 
-        <View style={styles.goalContainer}>
+        <View style={[styles.goalContainer, {
+          backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.07)' : 'rgba(66, 133, 244, 0.05)',
+          borderRadius: 16,
+          padding:
+          16,
+          marginBottom: 16,
+        }]}>
           <View style={styles.goalIconContainer}>
             <FontAwesomeIcon icon={faFlag as IconProp} size={24} color="#FFFFFF" />
           </View>
           <View style={styles.goalInfo}>
-            <Text style={styles.goalLabel}>Mevcut Hedef</Text>
-            <Text style={styles.goalValue}>{getGoalText()}</Text>
+            <Text style={[styles.goalLabel, { color: themeAsAny.colors.onSurfaceVariant }]}>Mevcut Hedef</Text>
+            <Text style={[styles.goalValue, { color: themeAsAny.colors.onSurface }]}>{getGoalText()}</Text>
           </View>
         </View>
 
-        <View style={styles.goalContainer}>
+        <View style={[styles.goalContainer, {
+          backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.07)' : 'rgba(255, 152, 0, 0.05)',
+          borderRadius: 16,
+          padding: 16,
+          marginBottom: 16,
+        }]}>
           <View style={[styles.goalIconContainer, { backgroundColor: '#FF9800' }]}>
             <FontAwesomeIcon icon={faPersonRunning as IconProp} size={24} color="#FFFFFF" />
           </View>
           <View style={styles.goalInfo}>
-            <Text style={styles.goalLabel}>Aktivite Seviyesi</Text>
-            <Text style={styles.goalValue}>{getActivityLevelText()}</Text>
+            <Text style={[styles.goalLabel, { color: themeAsAny.colors.onSurfaceVariant }]}>Aktivite Seviyesi</Text>
+            <Text style={[styles.goalValue, { color: themeAsAny.colors.onSurface }]}>{getActivityLevelText()}</Text>
           </View>
         </View>
 
-        <View style={styles.progressSection}>
-          <Text style={styles.progressTitle}>Haftalık İlerleme</Text>
+        <View style={[styles.progressSection, {
+          backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.07)' : 'rgba(76, 175, 80, 0.05)',
+          borderRadius: 16,
+          padding: 16,
+        }]}>
+          <Text style={[styles.progressTitle, { color: themeAsAny.colors.onSurface }]}>Haftalık İlerleme</Text>
 
           <View style={styles.progressContainer}>
-            <View style={styles.progressBarContainer}>
+            <View style={[styles.progressBarContainer, { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)' }]}>
               <View
                 style={[
                   styles.progressBar,
@@ -568,18 +692,19 @@ const ProfileScreen: React.FunctionComponent<ProfileScreenProps> = () => {
                         ? Math.min((user.completedWorkouts / user.totalWorkouts) * 100, 100)
                         : 0
                     }%`,
+                    backgroundColor: '#4CAF50',
                   },
                 ]}
               />
             </View>
-            <Text style={styles.progressText}>
+            <Text style={[styles.progressText, { color: themeAsAny.colors.onSurfaceVariant }]}>
               {user.completedWorkouts}/{user.totalWorkouts} antrenman tamamlandı
             </Text>
           </View>
 
           <View style={styles.streakContainer}>
             <FontAwesomeIcon icon={faFire as IconProp} size={24} color="#FF5722" />
-            <Text style={styles.streakText}>5 günlük seri!</Text>
+            <Text style={[styles.streakText, { color: themeAsAny.colors.onSurface }]}>5 günlük seri!</Text>
           </View>
         </View>
       </PaperCard.Content>
@@ -587,94 +712,175 @@ const ProfileScreen: React.FunctionComponent<ProfileScreenProps> = () => {
   );
 
   const renderSettings = () => (
-    <PaperCard style={[styles.card, { backgroundColor: themeAsAny.colors.surface }]}>
-      <PaperCard.Content>
-        <PaperTitle style={styles.sectionTitle}>Ayarlar</PaperTitle>
+    <PaperCard style={[styles.card, { 
+      backgroundColor: isDarkMode ? '#1E1E2E' : themeAsAny.colors.surface,
+      borderRadius: 24,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 12,
+      elevation: 8,
+      margin: 16,
+      overflow: 'hidden'
+    }]}>
+      <PaperCard.Content style={styles.cardContent}>
+        <View style={styles.sectionTitleContainer}>
+          <View style={{
+            backgroundColor: `${themeAsAny.colors.primary}20`,
+            width: 50, 
+            height: 50, 
+            borderRadius: 25,
+            justifyContent: 'center',
+            alignItems: 'center',
+            shadowColor: themeAsAny.colors.primary,
+            shadowOffset: { width: 0, height: 3 },
+            shadowOpacity: 0.2,
+            shadowRadius: 4,
+            elevation: 3
+          }}>
+            <FontAwesomeIcon icon={faCog as IconProp} size={24} color={themeAsAny.colors.primary} />
+          </View>
+          <Text style={[styles.cardTitle, { color: themeAsAny.colors.onSurface }]}>Ayarlar</Text>
+        </View>
 
         <TouchableOpacity
-          style={styles.settingItem}
+          style={[styles.settingItem, {
+            backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.07)' : 'rgba(66, 133, 244, 0.05)',
+            borderRadius: 16,
+            marginBottom: 12,
+          }]}
           onPress={() => navigation.navigate('Settings')}
         >
           <View style={styles.settingIconContainer}>
             <FontAwesomeIcon icon={faCog as IconProp} size={20} color="#FFFFFF" />
           </View>
           <View style={styles.settingTextContainer}>
-            <Text style={styles.settingTitle}>Uygulama Ayarları</Text>
-            <Text style={styles.settingDescription}>Bildirimler, karanlık mod ve daha fazlası</Text>
+            <Text style={[styles.settingTitle, { color: themeAsAny.colors.onSurface }]}>Uygulama Ayarları</Text>
+            <Text style={[styles.settingDescription, { color: themeAsAny.colors.onSurfaceVariant }]}>Bildirimler, karanlık mod ve daha fazlası</Text>
           </View>
-          <FontAwesomeIcon icon={faChevronRight as IconProp} size={20} color="#999" />
+          <FontAwesomeIcon icon={faChevronRight as IconProp} size={20} color={themeAsAny.colors.primary} />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.settingItem}>
+        <TouchableOpacity style={[styles.settingItem, {
+          backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.07)' : 'rgba(76, 175, 80, 0.05)',
+          borderRadius: 16,
+          marginBottom: 12,
+        }]}>
           <View style={[styles.settingIconContainer, { backgroundColor: '#4CAF50' }]}>
             <FontAwesomeIcon icon={faFileExport as IconProp} size={20} color="#FFFFFF" />
           </View>
           <View style={styles.settingTextContainer}>
-            <Text style={styles.settingTitle}>Verileri Dışa Aktar</Text>
-            <Text style={styles.settingDescription}>
+            <Text style={[styles.settingTitle, { color: themeAsAny.colors.onSurface }]}>Verileri Dışa Aktar</Text>
+            <Text style={[styles.settingDescription, { color: themeAsAny.colors.onSurfaceVariant }]}>
               Egzersiz ve sağlık verilerinizi dışa aktarın
             </Text>
           </View>
-          <FontAwesomeIcon icon={faChevronRight as IconProp} size={20} color="#999" />
+          <FontAwesomeIcon icon={faChevronRight as IconProp} size={20} color="#4CAF50" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.settingItem}>
+        <TouchableOpacity style={[styles.settingItem, {
+          backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.07)' : 'rgba(33, 150, 243, 0.05)',
+          borderRadius: 16,
+          marginBottom: 12,
+        }]}>
           <View style={[styles.settingIconContainer, { backgroundColor: '#2196F3' }]}>
             <FontAwesomeIcon icon={faCircleQuestion as IconProp} size={20} color="#FFFFFF" />
           </View>
           <View style={styles.settingTextContainer}>
-            <Text style={styles.settingTitle}>Yardım ve Destek</Text>
-            <Text style={styles.settingDescription}>SSS ve destek bilgileri</Text>
+            <Text style={[styles.settingTitle, { color: themeAsAny.colors.onSurface }]}>Yardım ve Destek</Text>
+            <Text style={[styles.settingDescription, { color: themeAsAny.colors.onSurfaceVariant }]}>SSS ve destek bilgileri</Text>
           </View>
-          <FontAwesomeIcon icon={faChevronRight as IconProp} size={20} color="#999" />
+          <FontAwesomeIcon icon={faChevronRight as IconProp} size={20} color="#2196F3" />
         </TouchableOpacity>
 
-        <PaperCard style={[styles.card, { marginTop: 16, marginBottom: 8, backgroundColor: themeAsAny.colors.surface }]}>
-          <PaperCard.Content>
-            <View style={styles.sectionTitleContainer}>
+        <View style={[styles.healthDataContainer, {
+          backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.07)' : 'rgba(0, 0, 0, 0.03)',
+          borderRadius: 16,
+          padding: 16,
+          marginTop: 16,
+          marginBottom: 16,
+        }]}>
+          <View style={styles.sectionTitleContainer}>
+            <View style={{
+              backgroundColor: `${themeAsAny.colors.primary}20`,
+              width: 40, 
+              height: 40, 
+              borderRadius: 20,
+              justifyContent: 'center',
+              alignItems: 'center',
+              shadowColor: themeAsAny.colors.primary,
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.1,
+              shadowRadius: 3,
+              elevation: 2
+            }}>
               <FontAwesomeIcon icon={faSync as IconProp} size={20} color={themeAsAny.colors.primary} />
-              <Text style={[styles.sectionTitle, { color: themeAsAny.colors.text }]}>Sağlık Verileri Özeti</Text>
             </View>
+            <Text style={[styles.healthDataTitle, { color: themeAsAny.colors.onSurface }]}>Sağlık Verileri Özeti</Text>
+          </View>
 
-            <View style={styles.adviceContainer}>
-              <View style={styles.adviceIcon}>
-                <FontAwesomeIcon icon={faWater as IconProp} size={20} color="#03A9F4" />
-              </View>
-              <View style={styles.adviceContent}>
-                <Text style={[styles.adviceText, { color: themeAsAny.colors.text }]}>
-                  <Text style={{ fontWeight: 'bold' }}>Su Tüketimi:</Text> Günlük{' '}
-                  {((user.waterIntake || 0) * 1000).toFixed(0)}ml / {((user.waterGoal || 0) * 1000).toFixed(0)}ml
-                </Text>
-              </View>
+          <View style={[styles.adviceContainer, { 
+            backgroundColor: isDarkMode ? 'rgba(3, 169, 244, 0.1)' : 'rgba(3, 169, 244, 0.05)',
+            borderWidth: 1,
+            borderColor: isDarkMode ? 'rgba(3, 169, 244, 0.2)' : 'rgba(3, 169, 244, 0.1)',
+            borderRadius: 12,
+          }]}>
+            <View style={[styles.adviceIcon, { backgroundColor: isDarkMode ? '#1E1E2E' : '#fff' }]}>
+              <FontAwesomeIcon icon={faWater as IconProp} size={20} color="#03A9F4" />
             </View>
-
-            <View style={styles.adviceContainer}>
-              <View style={styles.adviceIcon}>
-                <FontAwesomeIcon icon={faAppleAlt as IconProp} size={20} color="#4CAF50" />
-              </View>
-              <View style={styles.adviceContent}>
-                <Text style={[styles.adviceText, { color: themeAsAny.colors.text }]}>
-                  <Text style={{ fontWeight: 'bold' }}>Beslenme:</Text> Günlük {user.calories || 0} /{' '}
-                  {user.caloriesGoal || 0} kalori alımı
-                </Text>
-              </View>
+            <View style={styles.adviceContent}>
+              <Text style={[styles.adviceText, { color: themeAsAny.colors.onSurface }]}>
+                <Text style={{ fontWeight: 'bold' }}>Su Tüketimi:</Text> Günlük{' '}
+                {((user.waterIntake || 0) * 1000).toFixed(0)}ml / {((user.waterGoal || 0) * 1000).toFixed(0)}ml
+              </Text>
             </View>
+          </View>
 
-            <View style={styles.adviceContainer}>
-              <View style={styles.adviceIcon}>
-                <FontAwesomeIcon icon={faDumbbell as IconProp} size={20} color="#FF9800" />
-              </View>
-              <View style={styles.adviceContent}>
-                <Text style={[styles.adviceText, { color: themeAsAny.colors.text }]}>
-                  <Text style={{ fontWeight: 'bold' }}>Egzersiz:</Text> {user.completedWorkouts || 0} /{' '}
-                  {user.totalWorkouts || 0} antrenman tamamlandı
-                </Text>
-              </View>
+          <View style={[styles.adviceContainer, { 
+            backgroundColor: isDarkMode ? 'rgba(76, 175, 80, 0.1)' : 'rgba(76, 175, 80, 0.05)',
+            borderWidth: 1,
+            borderColor: isDarkMode ? 'rgba(76, 175, 80, 0.2)' : 'rgba(76, 175, 80, 0.1)',
+            borderRadius: 12,
+          }]}>
+            <View style={[styles.adviceIcon, { backgroundColor: isDarkMode ? '#1E1E2E' : '#fff' }]}>
+              <FontAwesomeIcon icon={faAppleAlt as IconProp} size={20} color="#4CAF50" />
             </View>
-          </PaperCard.Content>
-        </PaperCard>
+            <View style={styles.adviceContent}>
+              <Text style={[styles.adviceText, { color: themeAsAny.colors.onSurface }]}>
+                <Text style={{ fontWeight: 'bold' }}>Beslenme:</Text> Günlük {user.calories || 0} /{' '}
+                {user.caloriesGoal || 0} kalori alımı
+              </Text>
+            </View>
+          </View>
 
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <View style={[styles.adviceContainer, { 
+            backgroundColor: isDarkMode ? 'rgba(255, 152, 0, 0.1)' : 'rgba(255, 152, 0, 0.05)',
+            borderWidth: 1,
+            borderColor: isDarkMode ? 'rgba(255, 152, 0, 0.2)' : 'rgba(255, 152, 0, 0.1)',
+            borderRadius: 12,
+            marginBottom: 0,
+          }]}>
+            <View style={[styles.adviceIcon, { backgroundColor: isDarkMode ? '#1E1E2E' : '#fff' }]}>
+              <FontAwesomeIcon icon={faDumbbell as IconProp} size={20} color="#FF9800" />
+            </View>
+            <View style={styles.adviceContent}>
+              <Text style={[styles.adviceText, { color: themeAsAny.colors.onSurface }]}>
+                <Text style={{ fontWeight: 'bold' }}>Egzersiz:</Text> {user.completedWorkouts || 0} /{' '}
+                {user.totalWorkouts || 0} antrenman tamamlandı
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        <TouchableOpacity 
+          style={[styles.logoutButton, {
+            backgroundColor: isDarkMode ? 'rgba(244, 67, 54, 0.1)' : 'rgba(244, 67, 54, 0.05)',
+            borderRadius: 12,
+            padding: 14,
+            marginTop: 4,
+          }]}
+          onPress={handleLogout}
+        >
           <FontAwesomeIcon icon={faRightFromBracket as IconProp} size={20} color="#F44336" />
           <Text style={styles.logoutButtonText}>Çıkış Yap</Text>
         </TouchableOpacity>
@@ -683,10 +889,61 @@ const ProfileScreen: React.FunctionComponent<ProfileScreenProps> = () => {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: themeAsAny.colors.background }]}>
-      <ScrollView
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: themeAsAny.colors.background }]}>
+      {/* Header Section - Modern and vibrant design */}
+      <View style={[styles.headerContainer, { backgroundColor: themeAsAny.colors.primary }]}>
+        <View style={styles.headerContent}>
+          <View>
+            <Text style={[styles.headerSubtitle, { color: 'rgba(255, 255, 255, 0.9)' }]}>
+              Merhaba
+            </Text>
+            <Text style={[styles.headerTitle, { color: '#fff' }]}>
+              {user.name}
+            </Text>
+            <Text style={[styles.headerInfo, { color: 'rgba(255, 255, 255, 0.9)' }]}>
+              {new Date().toLocaleDateString('tr-TR', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+              })}
+            </Text>
+          </View>
+          <TouchableOpacity onPress={() => setAvatarModalVisible(true)}>
+            <View style={styles.avatarHeaderContainer}>
+              {user.profilePhoto ? (
+                <Image
+                  source={{ uri: user.profilePhoto }}
+                  style={{ width: '100%', height: '100%', borderRadius: 32.5 }}
+                />
+              ) : (
+                <View style={[styles.avatarHeaderPlaceholder]}>
+                  <Text style={styles.avatarHeaderLetter}>{user.name[0]}</Text>
+                </View>
+              )}
+            </View>
+          </TouchableOpacity>
+        </View>
+
+        {/* Streak Chip */}
+        <Chip
+          icon={({ size, color }: { size: number; color: string }) => (
+            <FontAwesomeIcon icon={faFire as IconProp} size={size} color="#FF9800" />
+          )}
+          style={[styles.streakChip, { 
+            backgroundColor: 'rgba(255, 255, 255, 0.25)',
+            borderWidth: 1,
+            borderColor: 'rgba(255, 255, 255, 0.5)'
+          }]}
+          textStyle={[styles.streakChipText, { color: '#fff' }]}
+        >
+          {user.streak || 5} günlük seri!
+        </Chip>
+      </View>
+
+      <ScrollView 
         style={styles.scrollContainer}
         contentContainerStyle={styles.scrollContentContainer}
+        showsVerticalScrollIndicator={false}
       >
         {renderProfileInfo()}
         {renderHealthMetrics()}
@@ -702,32 +959,44 @@ const ProfileScreen: React.FunctionComponent<ProfileScreenProps> = () => {
         onRequestClose={() => setEditModalVisible(false)}
       >
         <View style={styles.modalContainer}>
-          <View style={[styles.modalContent, { backgroundColor: themeAsAny.colors.surface }]}>
+          <View style={[styles.modalContent, { 
+            backgroundColor: isDarkMode ? '#1E1E2E' : themeAsAny.colors.surface,
+            borderRadius: 24,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 10 },
+            shadowOpacity: 0.2,
+            shadowRadius: 20,
+            elevation: 12
+          }]}>
             <ScrollView
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.modalScrollContent}
               keyboardShouldPersistTaps="handled"
             >
               <View style={styles.modalHeader}>
-                <PaperTitle style={styles.modalTitle}>Profili Düzenle</PaperTitle>
+                <Text style={[styles.modalTitle, { color: themeAsAny.colors.onSurface }]}>Profili Düzenle</Text>
                 <TouchableOpacity
                   onPress={() => setEditModalVisible(false)}
                   style={styles.closeButton}
                 >
-                  <FontAwesomeIcon icon={faXmark as IconProp} size={24} color="#666" />
+                  <FontAwesomeIcon icon={faXmark as IconProp} size={24} color={themeAsAny.colors.onSurfaceVariant} />
                 </TouchableOpacity>
               </View>
 
               {tempProfile && (
                 <>
                   <View style={styles.inputContainer}>
-                    <Text style={styles.inputLabel}>Ad Soyad</Text>
+                    <Text style={[styles.inputLabel, { color: themeAsAny.colors.onSurface }]}>Ad Soyad</Text>
                     <TextInput
                       value={tempProfile.name}
                       onChangeText={(text: string) =>
                         setTempProfile({ ...tempProfile, name: text })
                       }
-                      style={styles.input}
+                      style={[styles.input, {
+                        backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                        borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
+                        color: themeAsAny.colors.onSurface
+                      }]}
                       underlineColor="transparent"
                       activeUnderlineColor="transparent"
                       mode="flat"
@@ -735,13 +1004,17 @@ const ProfileScreen: React.FunctionComponent<ProfileScreenProps> = () => {
                   </View>
 
                   <View style={styles.inputContainer}>
-                    <Text style={styles.inputLabel}>E-posta</Text>
+                    <Text style={[styles.inputLabel, { color: themeAsAny.colors.onSurface }]}>E-posta</Text>
                     <TextInput
                       value={tempProfile.email}
                       onChangeText={(text: string) =>
                         setTempProfile({ ...tempProfile, email: text })
                       }
-                      style={styles.input}
+                      style={[styles.input, {
+                        backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                        borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
+                        color: themeAsAny.colors.onSurface
+                      }]}
                       underlineColor="transparent"
                       activeUnderlineColor="transparent"
                       mode="flat"
@@ -750,64 +1023,69 @@ const ProfileScreen: React.FunctionComponent<ProfileScreenProps> = () => {
                   </View>
 
                   <View style={styles.inputContainer}>
-                    <Text style={styles.inputLabel}>Kilo (kg)</Text>
+                    <Text style={[styles.inputLabel, { color: themeAsAny.colors.onSurface }]}>Kilo (kg)</Text>
                     <TextInput
                       value={tempProfile.weight?.toString() || ''}
                       onChangeText={(text: string) =>
                         setTempProfile({ ...tempProfile, weight: parseFloat(text) || 0 })
                       }
                       keyboardType="numeric"
-                      style={styles.input}
-                      underlineColor="transparent"
-                      activeUnderlineColor="transparent"
-                      mode="flat"
+                      style={[styles.input, {
+                        backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                        borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
+                        color: themeAsAny.colors.onSurface
+                      }]}
                     />
                   </View>
 
                   <View style={styles.inputContainer}>
-                    <Text style={styles.inputLabel}>Boy (cm)</Text>
+                    <Text style={[styles.inputLabel, { color: themeAsAny.colors.onSurface }]}>Boy (cm)</Text>
                     <TextInput
                       value={tempProfile.height?.toString() || ''}
                       onChangeText={(text: string) =>
                         setTempProfile({ ...tempProfile, height: parseFloat(text) || 0 })
                       }
                       keyboardType="numeric"
-                      style={styles.input}
-                      underlineColor="transparent"
-                      activeUnderlineColor="transparent"
-                      mode="flat"
+                      style={[styles.input, {
+                        backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                        borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
+                        color: themeAsAny.colors.onSurface
+                      }]}
                     />
                   </View>
 
                   <View style={styles.inputContainer}>
-                    <Text style={styles.inputLabel}>Yaş</Text>
+                    <Text style={[styles.inputLabel, { color: themeAsAny.colors.onSurface }]}>Yaş</Text>
                     <TextInput
                       value={tempProfile.age?.toString() || ''}
                       onChangeText={(text: string) =>
                         setTempProfile({ ...tempProfile, age: parseInt(text) || 0 })
                       }
                       keyboardType="numeric"
-                      style={styles.input}
-                      underlineColor="transparent"
-                      activeUnderlineColor="transparent"
-                      mode="flat"
+                      style={[styles.input, {
+                        backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                        borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)',
+                        color: themeAsAny.colors.onSurface
+                      }]}
                     />
                   </View>
                 </>
               )}
 
-              <PaperButton
-                mode="contained"
+              <TouchableOpacity
+                style={[styles.saveButton, { 
+                  backgroundColor: themeAsAny.colors.primary,
+                  shadowColor: themeAsAny.colors.primary,
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 8,
+                  elevation: 5
+                }]}
                 onPress={saveProfile}
-                style={styles.saveButton}
-                labelStyle={styles.buttonLabel}
-                buttonColor={themeAsAny.colors.primary}
-                icon={({ size, color }: { size: number; color: string }) => (
-                  <FontAwesomeIcon icon={faCheck as IconProp} size={size} color={color} />
-                )}
               >
-                Kaydet
-              </PaperButton>
+                <FontAwesomeIcon icon={faCheck as IconProp} size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+                <Text style={styles.saveButtonText}>Kaydet</Text>
+              </TouchableOpacity>
             </ScrollView>
           </View>
         </View>
@@ -821,40 +1099,70 @@ const ProfileScreen: React.FunctionComponent<ProfileScreenProps> = () => {
         onRequestClose={() => setAvatarModalVisible(false)}
       >
         <View style={styles.modalContainer}>
-          <View style={[styles.avatarModalContent, { backgroundColor: themeAsAny.colors.surface }]}>
-            <PaperTitle style={styles.modalTitle}>Profil Fotoğrafı</PaperTitle>
+          <View style={[styles.avatarModalContent, { 
+            backgroundColor: isDarkMode ? '#1E1E2E' : themeAsAny.colors.surface,
+            borderRadius: 24,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 10 },
+            shadowOpacity: 0.2,
+            shadowRadius: 20,
+            elevation: 12
+          }]}>
+            <Text style={[styles.modalTitle, { color: themeAsAny.colors.onSurface }]}>Profil Fotoğrafı</Text>
 
-            <TouchableOpacity style={styles.avatarOption} onPress={takePicture}>
+            <TouchableOpacity 
+              style={[styles.avatarOption, { 
+                backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.07)' : 'rgba(66, 133, 244, 0.05)',
+                borderWidth: 1,
+                borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(66, 133, 244, 0.1)'
+              }]} 
+              onPress={takePicture}
+            >
               <View style={[styles.avatarOptionIcon, { backgroundColor: '#4285F4' }]}>
                 <FontAwesomeIcon icon={faCamera as IconProp} size={24} color="#FFFFFF" />
               </View>
-              <Text style={styles.avatarOptionText}>Fotoğraf Çek</Text>
+              <Text style={[styles.avatarOptionText, { color: themeAsAny.colors.onSurface }]}>Fotoğraf Çek</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.avatarOption} onPress={pickImage}>
+            <TouchableOpacity 
+              style={[styles.avatarOption, { 
+                backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.07)' : 'rgba(76, 175, 80, 0.05)',
+                borderWidth: 1,
+                borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(76, 175, 80, 0.1)'
+              }]} 
+              onPress={pickImage}
+            >
               <View style={[styles.avatarOptionIcon, { backgroundColor: '#4CAF50' }]}>
                 <FontAwesomeIcon icon={faImage as IconProp} size={24} color="#FFFFFF" />
               </View>
-              <Text style={styles.avatarOptionText}>Galeriden Seç</Text>
+              <Text style={[styles.avatarOptionText, { color: themeAsAny.colors.onSurface }]}>Galeriden Seç</Text>
             </TouchableOpacity>
 
             {user.profilePhoto && (
-              <TouchableOpacity style={styles.avatarOption} onPress={removeProfilePhoto}>
+              <TouchableOpacity 
+                style={[styles.avatarOption, { 
+                  backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.07)' : 'rgba(244, 67, 54, 0.05)',
+                  borderWidth: 1,
+                  borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(244, 67, 54, 0.1)'
+                }]} 
+                onPress={removeProfilePhoto}
+              >
                 <View style={[styles.avatarOptionIcon, { backgroundColor: '#F44336' }]}>
                   <FontAwesomeIcon icon={faTrashCan as IconProp} size={24} color="#FFFFFF" />
                 </View>
-                <Text style={styles.avatarOptionText}>Fotoğrafı Kaldır</Text>
+                <Text style={[styles.avatarOptionText, { color: themeAsAny.colors.onSurface }]}>Fotoğrafı Kaldır</Text>
               </TouchableOpacity>
             )}
 
-            <PaperButton
-              mode="outlined"
+            <TouchableOpacity
+              style={[styles.cancelButton, { 
+                borderColor: themeAsAny.colors.outline,
+                marginTop: 20
+              }]}
               onPress={() => setAvatarModalVisible(false)}
-              style={styles.cancelButton}
-              textColor={themeAsAny.colors.primary}
             >
-              İptal
-            </PaperButton>
+              <Text style={{ color: themeAsAny.colors.primary, textAlign: 'center', fontWeight: 'bold' }}>İptal</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -863,9 +1171,79 @@ const ProfileScreen: React.FunctionComponent<ProfileScreenProps> = () => {
 };
 
 const styles = StyleSheet.create<StylesType>({
-  container: {
+  safeArea: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+  },
+  headerContainer: {
+    padding: 20,
+    paddingTop: 30,
+    paddingBottom: 25,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.2,
+    shadowRadius: 15,
+    elevation: 10,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    opacity: 0.9,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginTop: 4,
+  },
+  headerInfo: {
+    fontSize: 14,
+    marginTop: 8,
+    opacity: 0.8,
+  },
+  avatarHeaderContainer: {
+    width: 65,
+    height: 65,
+    borderRadius: 32.5,
+    borderWidth: 3,
+    borderColor: 'white',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 8,
+    backgroundColor: '#4285F4',
+  },
+  avatarHeaderPlaceholder: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 32.5,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#4285F4',
+  },
+  avatarHeaderLetter: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  streakChip: {
+    marginTop: 16,
+    alignSelf: 'flex-start',
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  streakChipText: {
+    fontWeight: 'bold',
   },
   scrollContainer: {
     flex: 1,
@@ -874,7 +1252,47 @@ const styles = StyleSheet.create<StylesType>({
     paddingBottom: 30,
   },
   card: {
-    margin: 10,
+    marginBottom: 16,
+  },
+  cardContent: {
+    padding: 16,
+  },
+  sectionTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  cardTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginLeft: 12,
+  },
+  profileName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  profileEmail: {
+    fontSize: 16,
+    marginTop: 4,
+  },
+  editProfileButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  editProfileButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 14,
   },
   profileHeader: {
     flexDirection: 'row',
@@ -914,16 +1332,6 @@ const styles = StyleSheet.create<StylesType>({
   profileInfo: {
     flex: 1,
   },
-  editButton: {
-    marginTop: 15,
-    borderRadius: 8,
-    paddingVertical: 4,
-  },
-  editButtonLabel: {
-    fontWeight: 'bold' as const,
-    fontSize: 14,
-    letterSpacing: 0.5,
-  },
   sectionTitle: {
     fontWeight: 'bold' as const,
     marginBottom: 10,
@@ -931,6 +1339,7 @@ const styles = StyleSheet.create<StylesType>({
   metricsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginVertical: 16,
   },
   metricItem: {
     alignItems: 'center',
@@ -1119,27 +1528,32 @@ const styles = StyleSheet.create<StylesType>({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 14,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
   },
   settingTextContainer: {
     flex: 1,
   },
   settingTitle: {
-    fontSize: 14,
-    fontWeight: 'bold' as const,
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 4,
   },
   settingDescription: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#666',
   },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 10,
-    marginTop: 8,
+    justifyContent: 'center',
   },
   logoutButtonText: {
-    fontSize: 14,
-    fontWeight: 'bold' as const,
+    fontSize: 16,
+    fontWeight: 'bold',
     marginLeft: 12,
     color: '#F44336',
   },
@@ -1167,18 +1581,8 @@ const styles = StyleSheet.create<StylesType>({
     overflow: 'hidden',
   },
   avatarModalContent: {
-    backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 20,
+    padding: 24,
     width: '90%',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
   },
   modalTitle: {
     textAlign: 'center',
@@ -1219,15 +1623,14 @@ const styles = StyleSheet.create<StylesType>({
   avatarOption: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
-    backgroundColor: '#f8f8f8',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
   },
   avatarOptionText: {
     fontSize: 16,
-    marginLeft: 15,
-    fontWeight: '500',
+    marginLeft: 16,
+    fontWeight: '600',
   },
   avatarOptionIcon: {
     width: 44,
@@ -1237,16 +1640,14 @@ const styles = StyleSheet.create<StylesType>({
     alignItems: 'center',
   },
   cancelButton: {
-    marginTop: 20,
-    borderRadius: 8,
-    borderColor: '#ccc',
     borderWidth: 1,
-    paddingVertical: 8,
+    borderRadius: 12,
+    paddingVertical: 14,
   },
   modalScrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 30,
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 32,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -1261,15 +1662,18 @@ const styles = StyleSheet.create<StylesType>({
     padding: 5,
   },
   saveButton: {
-    marginTop: 20,
+    marginTop: 24,
     marginBottom: 10,
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingVertical: 14,
+    borderRadius: 12,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  buttonLabel: {
-    fontWeight: 'bold' as const,
+  saveButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
     fontSize: 16,
-    letterSpacing: 0.5,
   },
   settingsOptionContainer: {
     flexDirection: 'row',
@@ -1291,35 +1695,6 @@ const styles = StyleSheet.create<StylesType>({
   },
   settingsDivider: {
     height: 1,
-  },
-  sectionTitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  adviceContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 10,
-    borderRadius: 10,
-    marginBottom: 10,
-    backgroundColor: '#f8f8f8',
-  },
-  adviceIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#4285F4',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 14,
-  },
-  adviceContent: {
-    flex: 1,
-  },
-  adviceText: {
-    fontSize: 16,
-    color: '#666',
   },
   sleepContainer: {
     marginVertical: 10,
@@ -1384,6 +1759,38 @@ const styles = StyleSheet.create<StylesType>({
     color: '#4285F4',
     marginRight: 4,
     fontSize: 14,
+  },
+  adviceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 16,
+    backgroundColor: '#f8f8f8',
+  },
+  adviceIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#4285F4',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  adviceContent: {
+    flex: 1,
+  },
+  adviceText: {
+    fontSize: 16,
+    color: '#666',
+  },
+  healthDataContainer: {
+    marginTop: 16,
+  },
+  healthDataTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginLeft: 12,
   },
 });
 

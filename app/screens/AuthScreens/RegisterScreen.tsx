@@ -7,6 +7,9 @@ import {
   Platform,
   ScrollView,
   Alert,
+  SafeAreaView,
+  StatusBar,
+  Dimensions,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
@@ -17,6 +20,18 @@ import {
 } from '../../utils/paperComponents';
 import { useTheme } from '../../context/ThemeContext';
 import { isValidEmail, isValidPassword } from '../../utils/validation';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { 
+  faUser, 
+  faEnvelope, 
+  faLock, 
+  faArrowLeft, 
+  faUserPlus,
+  faCheck,
+  faArrowRight
+} from '@fortawesome/free-solid-svg-icons';
+
+const { width, height } = Dimensions.get('window');
 
 type RegisterScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Register'>;
 
@@ -33,36 +48,38 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
+  const [isRegistering, setIsRegistering] = useState(false);
 
   const { theme } = useTheme();
   const themeAsAny = theme as any;
+  const isDarkMode = themeAsAny.dark;
 
   const validateForm = (): boolean => {
     let isValid = true;
 
     if (!name.trim()) {
-      setNameError('Please enter your name');
+      setNameError('Lütfen adınızı girin');
       isValid = false;
     } else {
       setNameError('');
     }
 
     if (!isValidEmail(email)) {
-      setEmailError('Please enter a valid email address');
+      setEmailError('Lütfen geçerli bir e-posta adresi girin');
       isValid = false;
     } else {
       setEmailError('');
     }
 
     if (!isValidPassword(password)) {
-      setPasswordError('Password must be at least 6 characters');
+      setPasswordError('Şifre en az 6 karakter olmalıdır');
       isValid = false;
     } else {
       setPasswordError('');
     }
 
     if (password !== confirmPassword) {
-      setConfirmPasswordError('Passwords do not match');
+      setConfirmPasswordError('Şifreler eşleşmiyor');
       isValid = false;
     } else {
       setConfirmPasswordError('');
@@ -76,136 +93,275 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
       return;
     }
 
-    // Here you would typically make an API call to register the user
-    // For now, we'll just simulate success
-    Alert.alert('Success', 'Registration successful', [
-      {
-        text: 'OK',
-        onPress: () => navigation.navigate('Login'),
-      },
-    ]);
+    setIsRegistering(true);
+
+    // Kayıt işlemi simülasyonu
+    setTimeout(() => {
+      setIsRegistering(false);
+      Alert.alert('Başarılı', 'Kayıt işlemi tamamlandı', [
+        {
+          text: 'Tamam',
+          onPress: () => navigation.navigate('Login'),
+        },
+      ]);
+    }, 1500);
   };
 
+  const headerBackgroundColor = isDarkMode 
+    ? themeAsAny.colors.primary + '80' 
+    : themeAsAny.colors.primary;
+
+  const cardBackgroundColor = isDarkMode 
+    ? '#1E1E2E' 
+    : '#FFFFFF';
+
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={[styles.container, { backgroundColor: themeAsAny.colors.background }]}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.formContainer}>
-          <PaperText
-            variant="headlineLarge"
-            style={{ color: themeAsAny.colors.primary, marginBottom: 24, textAlign: 'center' }}
+    <SafeAreaView style={[styles.container, { backgroundColor: themeAsAny.colors.background }]}>
+      <StatusBar 
+        barStyle={isDarkMode ? 'light-content' : 'dark-content'} 
+        backgroundColor="transparent"
+        translucent 
+      />
+      
+      {/* Header Section */}
+      <View style={[
+        styles.headerContainer, 
+        { 
+          backgroundColor: headerBackgroundColor,
+          shadowColor: themeAsAny.colors.primary,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.25,
+          shadowRadius: 8,
+          elevation: 8
+        }
+      ]}>
+        <TouchableOpacity 
+          style={styles.backButton} 
+          onPress={() => navigation.goBack()}
+        >
+          <FontAwesomeIcon 
+            icon={faArrowLeft} 
+            size={24} 
+            color="white" 
+          />
+        </TouchableOpacity>
+
+        <View style={styles.logoCircle}>
+          <FontAwesomeIcon 
+            icon={faUserPlus} 
+            size={40} 
+            color="#FFF" 
+          />
+        </View>
+        <PaperText
+          variant="headlineMedium"
+          style={styles.logoText}
+        >
+          Hesap Oluştur
+        </PaperText>
+      </View>
+
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
+      >
+        <ScrollView 
+          contentContainerStyle={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={[
+            styles.formCard, 
+            { 
+              backgroundColor: cardBackgroundColor,
+              shadowColor: isDarkMode ? themeAsAny.colors.primary : '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: isDarkMode ? 0.3 : 0.1,
+              shadowRadius: 12,
+              elevation: 8 
+            }
+          ]}>
+            {/* Ad Soyad Input */}
+            <View style={styles.inputContainer}>
+              <FontAwesomeIcon 
+                icon={faUser} 
+                size={20} 
+                color={themeAsAny.colors.primary} 
+                style={styles.inputIcon}
+              />
+              <PaperTextInput
+                label="Ad Soyad"
+                value={name}
+                onChangeText={(text: string) => {
+                  setName(text);
+                  if (nameError) setNameError('');
+                }}
+                mode="outlined"
+                style={[styles.input, { backgroundColor: 'transparent' }]}
+                error={!!nameError}
+                autoCapitalize="words"
+                outlineColor={isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)'}
+                activeOutlineColor={themeAsAny.colors.primary}
+              />
+            </View>
+            {nameError ? (
+              <PaperText
+                variant="labelSmall"
+                style={[styles.errorText, { color: themeAsAny.colors.error }]}
+              >
+                {nameError}
+              </PaperText>
+            ) : null}
+
+            {/* E-posta Input */}
+            <View style={styles.inputContainer}>
+              <FontAwesomeIcon 
+                icon={faEnvelope} 
+                size={20} 
+                color={themeAsAny.colors.primary} 
+                style={styles.inputIcon}
+              />
+              <PaperTextInput
+                label="E-posta"
+                value={email}
+                onChangeText={(text: string) => {
+                  setEmail(text);
+                  if (emailError) setEmailError('');
+                }}
+                mode="outlined"
+                style={[styles.input, { backgroundColor: 'transparent' }]}
+                error={!!emailError}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                outlineColor={isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)'}
+                activeOutlineColor={themeAsAny.colors.primary}
+              />
+            </View>
+            {emailError ? (
+              <PaperText
+                variant="labelSmall"
+                style={[styles.errorText, { color: themeAsAny.colors.error }]}
+              >
+                {emailError}
+              </PaperText>
+            ) : null}
+
+            {/* Şifre Input */}
+            <View style={styles.inputContainer}>
+              <FontAwesomeIcon 
+                icon={faLock} 
+                size={20} 
+                color={themeAsAny.colors.primary} 
+                style={styles.inputIcon}
+              />
+              <PaperTextInput
+                label="Şifre"
+                value={password}
+                onChangeText={(text: string) => {
+                  setPassword(text);
+                  if (passwordError) setPasswordError('');
+                }}
+                mode="outlined"
+                style={[styles.input, { backgroundColor: 'transparent' }]}
+                error={!!passwordError}
+                secureTextEntry
+                outlineColor={isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)'}
+                activeOutlineColor={themeAsAny.colors.primary}
+              />
+            </View>
+            {passwordError ? (
+              <PaperText
+                variant="labelSmall"
+                style={[styles.errorText, { color: themeAsAny.colors.error }]}
+              >
+                {passwordError}
+              </PaperText>
+            ) : null}
+
+            {/* Şifre Tekrar Input */}
+            <View style={styles.inputContainer}>
+              <FontAwesomeIcon 
+                icon={faCheck} 
+                size={20} 
+                color={themeAsAny.colors.primary} 
+                style={styles.inputIcon}
+              />
+              <PaperTextInput
+                label="Şifre (Tekrar)"
+                value={confirmPassword}
+                onChangeText={(text: string) => {
+                  setConfirmPassword(text);
+                  if (confirmPasswordError) setConfirmPasswordError('');
+                }}
+                mode="outlined"
+                style={[styles.input, { backgroundColor: 'transparent' }]}
+                error={!!confirmPasswordError}
+                secureTextEntry
+                outlineColor={isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)'}
+                activeOutlineColor={themeAsAny.colors.primary}
+              />
+            </View>
+            {confirmPasswordError ? (
+              <PaperText
+                variant="labelSmall"
+                style={[styles.errorText, { color: themeAsAny.colors.error }]}
+              >
+                {confirmPasswordError}
+              </PaperText>
+            ) : null}
+
+            {/* Kayıt Ol Butonu */}
+            <TouchableOpacity
+              style={[
+                styles.registerButton, 
+                { 
+                  backgroundColor: themeAsAny.colors.primary,
+                  shadowColor: themeAsAny.colors.primary,
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 8,
+                  elevation: 5,
+                  opacity: isRegistering ? 0.7 : 1
+                }
+              ]}
+              onPress={handleRegister}
+              disabled={isRegistering}
+            >
+              <PaperText variant="titleMedium" style={styles.registerButtonText}>
+                {isRegistering ? 'Kayıt Yapılıyor...' : 'Kayıt Ol'}
+              </PaperText>
+              {!isRegistering && (
+                <FontAwesomeIcon 
+                  icon={faArrowRight} 
+                  size={18} 
+                  color="#FFFFFF" 
+                  style={styles.registerButtonIcon}
+                />
+              )}
+            </TouchableOpacity>
+          </View>
+
+          {/* Giriş Yap Linki */}
+          <TouchableOpacity 
+            style={styles.loginLink} 
+            onPress={() => navigation.navigate('Login')}
           >
-            Create Account
-          </PaperText>
-
-          <PaperTextInput
-            label="Full Name"
-            value={name}
-            onChangeText={(text: string) => {
-              setName(text);
-              if (nameError) setNameError('');
-            }}
-            mode="outlined"
-            style={styles.input}
-            error={!!nameError}
-            autoCapitalize="words"
-          />
-          {nameError ? (
             <PaperText
-              variant="labelSmall"
-              style={{ color: themeAsAny.colors.error, marginBottom: 8 }}
+              variant="bodyMedium"
+              style={{ color: themeAsAny.colors.onSurfaceVariant }}
             >
-              {nameError}
+              Zaten hesabınız var mı?
             </PaperText>
-          ) : null}
-
-          <PaperTextInput
-            label="Email"
-            value={email}
-            onChangeText={(text: string) => {
-              setEmail(text);
-              if (emailError) setEmailError('');
-            }}
-            mode="outlined"
-            style={styles.input}
-            error={!!emailError}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-          {emailError ? (
             <PaperText
-              variant="labelSmall"
-              style={{ color: themeAsAny.colors.error, marginBottom: 8 }}
+              variant="titleMedium"
+              style={{ color: themeAsAny.colors.primary, marginLeft: 8 }}
             >
-              {emailError}
-            </PaperText>
-          ) : null}
-
-          <PaperTextInput
-            label="Password"
-            value={password}
-            onChangeText={(text: string) => {
-              setPassword(text);
-              if (passwordError) setPasswordError('');
-            }}
-            mode="outlined"
-            style={styles.input}
-            error={!!passwordError}
-            secureTextEntry
-          />
-          {passwordError ? (
-            <PaperText
-              variant="labelSmall"
-              style={{ color: themeAsAny.colors.error, marginBottom: 8 }}
-            >
-              {passwordError}
-            </PaperText>
-          ) : null}
-
-          <PaperTextInput
-            label="Confirm Password"
-            value={confirmPassword}
-            onChangeText={(text: string) => {
-              setConfirmPassword(text);
-              if (confirmPasswordError) setConfirmPasswordError('');
-            }}
-            mode="outlined"
-            style={styles.input}
-            error={!!confirmPasswordError}
-            secureTextEntry
-          />
-          {confirmPasswordError ? (
-            <PaperText
-              variant="labelSmall"
-              style={{ color: themeAsAny.colors.error, marginBottom: 8 }}
-            >
-              {confirmPasswordError}
-            </PaperText>
-          ) : null}
-
-          <Button
-            mode="contained"
-            style={styles.button}
-            contentStyle={{ backgroundColor: themeAsAny.colors.primary }}
-            labelStyle={styles.buttonText}
-            onPress={handleRegister}
-          >
-            Register
-          </Button>
-
-          <TouchableOpacity style={styles.linkButton} onPress={() => navigation.navigate('Login')}>
-            <PaperText
-              variant="labelLarge"
-              style={{ color: themeAsAny.colors.primary }}
-            >
-              Already have an account? Sign in
+              Giriş Yap
             </PaperText>
           </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
@@ -213,28 +369,98 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  headerContainer: {
+    paddingTop: StatusBar.currentHeight || 40,
+    paddingBottom: 24,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  },
+  backButton: {
+    position: 'absolute',
+    top: StatusBar.currentHeight ? StatusBar.currentHeight + 10 : 50,
+    left: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  logoCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 10,
+  },
+  logoText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  keyboardView: {
+    flex: 1,
+  },
   scrollContainer: {
     flexGrow: 1,
-    justifyContent: 'center',
     padding: 20,
   },
-  formContainer: {
+  formCard: {
+    borderRadius: 20,
+    padding: 24,
     width: '100%',
+    marginTop: -20,
   },
-  input: {
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 8,
   },
-  button: {
-    marginTop: 16,
-    paddingVertical: 8,
+  inputIcon: {
+    marginRight: 12,
+    marginLeft: 4,
+    marginTop: 8,
   },
-  buttonText: {
-    fontSize: 16,
+  input: {
+    flex: 1,
+    marginBottom: 4,
+  },
+  errorText: {
+    marginLeft: 36,
+    marginBottom: 12,
+  },
+  registerButton: {
+    height: 56,
+    borderRadius: 28,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 16,
+  },
+  registerButtonText: {
+    color: '#FFFFFF',
     fontWeight: 'bold',
   },
-  linkButton: {
-    marginTop: 16,
+  registerButtonIcon: {
+    marginLeft: 12,
+  },
+  loginLink: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 32,
+    padding: 12,
   },
 });
 

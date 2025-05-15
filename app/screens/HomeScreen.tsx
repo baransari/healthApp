@@ -75,30 +75,41 @@ const StatsCard = memo<StatsCardProps>(
     onPress = null,
     showDetails = false,
   }) => {
-    const { theme } = useTheme();
+    const { theme, isDarkMode } = useTheme();
     const themeAsAny = theme as any;
     
     const content = (
-      <View style={styles.cardContent}>
-        <View style={[styles.statsIconContainer, { backgroundColor: iconBackgroundColor }]}>
-          <FontAwesomeIcon icon={icon} size={24} color="#fff" />
+      <View style={styles.statsCardContent}>
+        {/* Header with icon and value */}
+        <View style={styles.statsCardHeader}>
+          <View style={[styles.statsIconContainer, { backgroundColor: iconBackgroundColor }]}>
+            <FontAwesomeIcon icon={icon} size={22} color="#fff" />
+          </View>
+          <View style={styles.statsValueContainer}>
+            <Text style={[styles.statsValue, { color: themeAsAny.colors.text }]}>{value}</Text>
+            <Text style={[styles.statsLabel, { color: themeAsAny.colors.textSecondary || '#666' }]}>{label}</Text>
+          </View>
         </View>
-        <Text style={[styles.statsValue, { color: themeAsAny.colors.text }]}>{value}</Text>
-        <Text style={[styles.statsLabel, { color: themeAsAny.colors.text }]}>{label}</Text>
-        <View style={styles.progressBarContainer}>
-          <View
-            style={[
-              styles.progressBar,
-              {
-                backgroundColor: iconBackgroundColor,
-                width: `${Math.min(progress, 100)}%`,
-              },
-            ]}
-          />
+        
+        {/* Progress section */}
+        <View style={styles.statsProgressSection}>
+          <View style={styles.progressBarContainer}>
+            <View
+              style={[
+                styles.progressBar,
+                {
+                  backgroundColor: iconBackgroundColor,
+                  width: `${Math.min(progress, 100)}%`,
+                },
+              ]}
+            />
+          </View>
+          <Text style={[styles.progressText, { color: iconBackgroundColor }]}>{progress}%</Text>
         </View>
-        <Text style={styles.progressText}>{progress}%</Text>
+        
+        {/* Optional details button */}
         {showDetails && (
-          <View style={styles.customButtonContainer}>
+          <View style={[styles.customButtonContainer, { backgroundColor: iconBackgroundColor }]}>
             <Text style={styles.customButtonText}>Detaylar</Text>
           </View>
         )}
@@ -107,11 +118,13 @@ const StatsCard = memo<StatsCardProps>(
 
     if (onPress) {
       return (
-        <View style={[styles.statsCard, { backgroundColor }]}>
-          <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
-            {content}
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity 
+          onPress={onPress} 
+          activeOpacity={0.9}
+          style={[styles.statsCard, { backgroundColor }]}
+        >
+          {content}
+        </TouchableOpacity>
       );
     }
 
@@ -129,40 +142,72 @@ interface WorkoutProgressCardProps {
 
 const WorkoutProgressCard = memo<WorkoutProgressCardProps>(
   ({ completedWorkouts, totalWorkouts, primaryColor, onPress }) => {
-    const { theme } = useTheme();
+    const { theme, isDarkMode } = useTheme();
     const themeAsAny = theme as any;
     const percentComplete = Math.round((completedWorkouts / totalWorkouts) * 100);
+    
     return (
-      <View style={[styles.card, { backgroundColor: themeAsAny.colors.surface }]}>
-        <View style={styles.cardContent}>
+      <View style={[styles.card, { 
+        backgroundColor: isDarkMode ? '#1E1E2E' : themeAsAny.colors.surface,
+        borderWidth: 0,
+      }]}>
+        <View style={[styles.cardContent, { paddingTop: 24 }]}>
           <View style={styles.sectionTitleContainer}>
-            <FontAwesomeIcon icon={faDumbbell} size={24} color={primaryColor} />
+            <View style={{
+              backgroundColor: `${primaryColor}20`,
+              width: 50, 
+              height: 50, 
+              borderRadius: 25,
+              justifyContent: 'center',
+              alignItems: 'center',
+              shadowColor: primaryColor,
+              shadowOffset: { width: 0, height: 3 },
+              shadowOpacity: 0.2,
+              shadowRadius: 4,
+              elevation: 3
+            }}>
+              <FontAwesomeIcon icon={faDumbbell} size={24} color={primaryColor} />
+            </View>
             <Text style={[styles.cardTitle, { color: themeAsAny.colors.text }]}>Antrenman İlerlemesi</Text>
           </View>
 
           <View style={styles.workoutProgressContainer}>
             <View style={styles.workoutProgressInfo}>
-              <Text style={styles.workoutProgressText}>
-                <Text style={styles.workoutProgressCount}>{completedWorkouts}</Text>/{totalWorkouts}{' '}
-                tamamlandı
-              </Text>
-              <Text style={styles.workoutProgressPercentage}>{percentComplete}%</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <FontAwesomeIcon icon={faCheckCircle} size={16} color={primaryColor} style={{ marginRight: 8 }} />
+                <Text style={[styles.workoutProgressText, { color: themeAsAny.colors.text }]}>
+                  <Text style={[styles.workoutProgressCount, { color: primaryColor }]}>{completedWorkouts}</Text>/{totalWorkouts}{' '}
+                  tamamlandı
+                </Text>
+              </View>
+              <Text style={[styles.workoutProgressPercentage, { color: primaryColor }]}>{percentComplete}%</Text>
             </View>
 
-            <View style={styles.workoutProgressBar}>
+            <View style={[styles.workoutProgressBar, { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)' }]}>
               <View
                 style={[
                   styles.workoutProgressBarFill,
-                  { width: `${Math.min(percentComplete, 100)}%` },
+                  { 
+                    width: `${Math.min(percentComplete, 100)}%`,
+                    backgroundColor: primaryColor,
+                  },
                 ]}
               />
             </View>
           </View>
         </View>
+
         <View style={styles.cardActions}>
           <TouchableOpacity
             onPress={onPress}
-            style={[styles.actionButton, { backgroundColor: primaryColor }]}
+            style={[styles.actionButton, { 
+              backgroundColor: primaryColor,
+              shadowColor: primaryColor,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.25,
+              shadowRadius: 8,
+              elevation: 5
+            }]}
           >
             <Text style={styles.actionButtonText}>Antrenmanlara Git</Text>
           </TouchableOpacity>
@@ -182,42 +227,99 @@ interface NutritionCardProps {
 
 const NutritionCard = memo<NutritionCardProps>(
   ({ calories, caloriesGoal, primaryColor, onPress }) => {
-    const { theme } = useTheme();
+    const { theme, isDarkMode } = useTheme();
     const themeAsAny = theme as any;
     const percentComplete = Math.round((calories / caloriesGoal) * 100);
     const remaining = caloriesGoal - calories;
+    
     return (
-      <View style={[styles.card, styles.lastCard, { backgroundColor: themeAsAny.colors.surface }]}>
-        <View style={styles.cardContent}>
+      <View style={[styles.card, styles.lastCard, { 
+        backgroundColor: isDarkMode ? '#1E1E2E' : themeAsAny.colors.surface,
+        borderWidth: 0,
+      }]}>
+        <View style={[styles.cardContent, { paddingTop: 24 }]}>
           <View style={styles.sectionTitleContainer}>
-            <FontAwesomeIcon icon={faUtensils} size={24} color={primaryColor} />
+            <View style={{
+              backgroundColor: `${primaryColor}20`,
+              width: 50, 
+              height: 50, 
+              borderRadius: 25,
+              justifyContent: 'center',
+              alignItems: 'center',
+              shadowColor: primaryColor,
+              shadowOffset: { width: 0, height: 3 },
+              shadowOpacity: 0.2,
+              shadowRadius: 4,
+              elevation: 3
+            }}>
+              <FontAwesomeIcon icon={faUtensils} size={24} color={primaryColor} />
+            </View>
             <Text style={[styles.cardTitle, { color: themeAsAny.colors.text }]}>Beslenme Durumu</Text>
           </View>
 
           <View style={styles.nutritionContainer}>
-            <View style={styles.nutritionItem}>
+            <View style={[styles.nutritionItem, { 
+              backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.07)' : 'rgba(0, 0, 0, 0.03)',
+              borderWidth: 1,
+              borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+            }]}>
               <Text style={[styles.nutritionLabel, { color: themeAsAny.colors.textSecondary || '#666' }]}>Tüketilen</Text>
-              <Text style={[styles.nutritionValue, { color: themeAsAny.colors.text }]}>{calories}</Text>
+              <Text style={[styles.nutritionValue, { color: primaryColor }]}>{calories}</Text>
               <Text style={[styles.nutritionUnit, { color: themeAsAny.colors.textSecondary || '#666' }]}>kalori</Text>
             </View>
 
-            <View style={styles.nutritionItem}>
+            <View style={[styles.nutritionItem, { 
+              backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.07)' : 'rgba(0, 0, 0, 0.03)',
+              borderWidth: 1,
+              borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+            }]}>
               <Text style={[styles.nutritionLabel, { color: themeAsAny.colors.textSecondary || '#666' }]}>Kalan</Text>
               <Text style={[styles.nutritionValue, { color: themeAsAny.colors.text }]}>{remaining}</Text>
               <Text style={[styles.nutritionUnit, { color: themeAsAny.colors.textSecondary || '#666' }]}>kalori</Text>
             </View>
 
-            <View style={styles.nutritionItem}>
+            <View style={[styles.nutritionItem, { 
+              backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.07)' : 'rgba(0, 0, 0, 0.03)',
+              borderWidth: 1,
+              borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+            }]}>
               <Text style={[styles.nutritionLabel, { color: themeAsAny.colors.textSecondary || '#666' }]}>Hedef</Text>
               <Text style={[styles.nutritionValue, { color: themeAsAny.colors.text }]}>{caloriesGoal}</Text>
               <Text style={[styles.nutritionUnit, { color: themeAsAny.colors.textSecondary || '#666' }]}>kalori</Text>
             </View>
           </View>
+          
+          {/* Progress bar for calories */}
+          <View style={{ width: '100%', paddingHorizontal: 4, marginTop: 16 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+              <Text style={{ fontSize: 14, color: themeAsAny.colors.textSecondary || '#666' }}>Günlük Hedef</Text>
+              <Text style={{ fontSize: 14, fontWeight: 'bold', color: primaryColor }}>{percentComplete}%</Text>
+            </View>
+            <View style={[styles.workoutProgressBar, { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)' }]}>
+              <View
+                style={[
+                  styles.workoutProgressBarFill,
+                  { 
+                    width: `${Math.min(percentComplete, 100)}%`,
+                    backgroundColor: primaryColor 
+                  },
+                ]}
+              />
+            </View>
+          </View>
         </View>
+        
         <View style={styles.cardActions}>
           <TouchableOpacity
             onPress={onPress}
-            style={[styles.actionButton, { backgroundColor: primaryColor }]}
+            style={[styles.actionButton, { 
+              backgroundColor: primaryColor,
+              shadowColor: primaryColor,
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.25,
+              shadowRadius: 8,
+              elevation: 5
+            }]}
           >
             <Text style={styles.actionButtonText}>Beslenme Takibine Git</Text>
           </TouchableOpacity>
@@ -261,47 +363,67 @@ const HomeScreen: React.FunctionComponent<HomeScreenProps> = ({ navigation }) =>
     return user !== null;
   }
 
+  // Günün renk temaları (değiştirebilirsiniz)
+  const primaryColor = themeAsAny.colors.primary || '#4285F4';
+  const secondaryColor = isDarkMode ? '#2C2C2C' : '#fff';
+  const headerColor = isDarkMode ? '#1E1E2E' : 'rgba(66, 133, 244, 0.95)';
+  const gradientColors = isDarkMode 
+    ? ['#272838', '#1E1E2E'] 
+    : ['#4285F4', '#5C9CFF'];
+
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: themeAsAny.colors.background }]}>
-      <ScrollView style={styles.container}>
-        {/* Header Section */}
-        <View style={styles.headerContainer}>
+      <ScrollView 
+        style={styles.container}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header Section - Modern ve canlı bir tasarım */}
+        <View style={[styles.headerContainer, { backgroundColor: headerColor }]}>
           <View style={styles.headerContent}>
             <View>
-              <Text style={styles.greetingText}>{getGreeting()},</Text>
-              <Text style={styles.welcomeText}>{user.name}!</Text>
+              <Text style={[styles.greetingText, { color: 'rgba(255, 255, 255, 0.9)' }]}>{getGreeting()},</Text>
+              <Text style={[styles.welcomeText, { color: '#fff' }]}>{user.name || 'Kullanıcı'}!</Text>
+              <Text style={[styles.dateText, { color: 'rgba(255, 255, 255, 0.9)' }]}>
+                {new Date().toLocaleDateString('tr-TR', {
+                  weekday: 'long',
+                  day: 'numeric',
+                  month: 'long',
+                })}
+              </Text>
             </View>
-            <Text style={styles.dateText}>
-              {new Date().toLocaleDateString('tr-TR', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
-            </Text>
             <TouchableOpacity>
-              <View style={[styles.avatar, { backgroundColor: '#2f80ed' }]}>
-                <Text style={{ color: '#fff', fontSize: 24 }}>{user.name?.charAt(0) || ''}</Text>
+              <View style={[styles.avatar, { backgroundColor: secondaryColor }]}>
+                <Text style={{ 
+                  color: isDarkMode ? '#fff' : primaryColor, 
+                  fontSize: 26,
+                  fontWeight: 'bold' 
+                }}>
+                  {user.name?.charAt(0) || 'K'}
+                </Text>
               </View>
             </TouchableOpacity>
           </View>
 
-          {/* Streak Chip */}
+          {/* Streak Chip - Daha yuvarlak ve canlı */}
           <Chip
             icon={({ size, color }: { size: number; color: string }) => (
-              <FontAwesomeIcon icon={faFire} size={size} color={color} />
+              <FontAwesomeIcon icon={faFire} size={size} color="#FF9800" />
             )}
-            style={styles.streakChip}
-            textStyle={styles.streakChipText}
+            style={[styles.streakChip, { 
+              backgroundColor: 'rgba(255, 255, 255, 0.25)',
+              borderWidth: 1,
+              borderColor: 'rgba(255, 255, 255, 0.5)'
+            }]}
+            textStyle={[styles.streakChipText, { color: '#fff' }]}
           >
-            {user.streak} günlük seri!
+            {user.streak || 5} günlük seri!
           </Chip>
         </View>
 
-        {/* Stats Cards */}
+        {/* Stats Cards - Daha yuvarlak ve gölgeli tasarım */}
         <View style={styles.statsRow}>
           <StatsCard
-            backgroundColor="#E3F2FD"
+            backgroundColor={isDarkMode ? '#1E1E2E' : '#E3F2FD'}
             iconBackgroundColor="#1E88E5"
             icon={faWalking}
             value={user.steps || 0}
@@ -310,7 +432,7 @@ const HomeScreen: React.FunctionComponent<HomeScreenProps> = ({ navigation }) =>
             onPress={() => navigation.navigate('StepTracker')}
           />
           <StatsCard
-            backgroundColor="#FFECB3"
+            backgroundColor={isDarkMode ? '#1E1E2E' : '#FFF8E1'}
             iconBackgroundColor="#FFC107"
             icon={faFire}
             value={user.calories || 0}
@@ -322,7 +444,7 @@ const HomeScreen: React.FunctionComponent<HomeScreenProps> = ({ navigation }) =>
 
         <View style={styles.statsRow}>
           <StatsCard
-            backgroundColor="#E1F5FE"
+            backgroundColor={isDarkMode ? '#1E1E2E' : '#E1F5FE'}
             iconBackgroundColor="#03A9F4"
             icon={faWater}
             value={`${user.waterIntake || 0}L`}
@@ -331,7 +453,7 @@ const HomeScreen: React.FunctionComponent<HomeScreenProps> = ({ navigation }) =>
             onPress={() => navigation.navigate('WaterTracker')}
           />
           <StatsCard
-            backgroundColor="#E8EAF6"
+            backgroundColor={isDarkMode ? '#1E1E2E' : '#E8EAF6'}
             iconBackgroundColor="#3F51B5"
             icon={faBed}
             value={`${sleepHours}s`}
@@ -342,36 +464,62 @@ const HomeScreen: React.FunctionComponent<HomeScreenProps> = ({ navigation }) =>
           />
         </View>
 
-        {/* Workout Progress */}
+        {/* Workout Progress - Modern ve temiz tasarım */}
         <WorkoutProgressCard
           completedWorkouts={user.completedWorkouts || 0}
-          totalWorkouts={user.totalWorkouts || 0}
-          primaryColor={themeAsAny.colors.primary}
+          totalWorkouts={user.totalWorkouts || 12}
+          primaryColor={primaryColor}
           onPress={() => navigation.navigate('ExerciseTracker')}
         />
 
-        {/* AI Health Advice */}
-        <Card style={[styles.card, { backgroundColor: themeAsAny.colors.surface }]}>
+        {/* AI Health Advice - Daha modern kartlar */}
+        <Card style={[styles.card, { 
+          backgroundColor: isDarkMode ? '#1E1E2E' : themeAsAny.colors.surface,
+          borderWidth: 0,
+        }]}>
           <Card.Content>
             <View style={styles.sectionTitleContainer}>
-              <FontAwesomeIcon icon={faBrain} size={24} color={themeAsAny.colors.primary} />
+              <View style={{
+                backgroundColor: `${primaryColor}20`,
+                width: 50, 
+                height: 50, 
+                borderRadius: 25,
+                justifyContent: 'center',
+                alignItems: 'center',
+                shadowColor: primaryColor,
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.2,
+                shadowRadius: 4,
+                elevation: 3
+              }}>
+                <FontAwesomeIcon icon={faBrain} size={24} color={primaryColor} />
+              </View>
               <Text style={[styles.cardTitle, { color: themeAsAny.colors.text }]}>AI Sağlık Tavsiyeleri</Text>
             </View>
-            <View style={styles.adviceContainer}>
-              <View style={styles.adviceIcon}>
-                <FontAwesomeIcon icon={faLightbulb} size={24} color="#FFC107" />
+            
+            <View style={[styles.adviceContainer, { 
+              backgroundColor: isDarkMode ? 'rgba(255, 193, 7, 0.1)' : 'rgba(255, 193, 7, 0.05)',
+              borderWidth: 1,
+              borderColor: isDarkMode ? 'rgba(255, 193, 7, 0.2)' : 'rgba(255, 193, 7, 0.1)',
+            }]}>
+              <View style={[styles.adviceIcon, { backgroundColor: isDarkMode ? '#1E1E2E' : '#fff' }]}>
+                <FontAwesomeIcon icon={faLightbulb} size={22} color="#FFC107" />
               </View>
               <View style={styles.adviceContent}>
                 <Text style={[styles.adviceText, { color: themeAsAny.colors.text }]}>
-                  Bugün {user.stepsGoal || 0} adım hedefine yakınsın!{' '}
-                  {(user.stepsGoal || 0) - (user.steps || 0)} adım daha at ve günlük hedefe ulaş.
+                  Bugün {user.stepsGoal || 10000} adım hedefine yakınsın!{' '}
+                  {(user.stepsGoal || 10000) - (user.steps || 0)} adım daha at ve günlük hedefe ulaş.
                 </Text>
               </View>
             </View>
 
-            <View style={styles.adviceContainer}>
-              <View style={styles.adviceIcon}>
-                <FontAwesomeIcon icon={faAppleAlt} size={24} color="#4CAF50" />
+            <View style={[styles.adviceContainer, { 
+              backgroundColor: isDarkMode ? 'rgba(76, 175, 80, 0.1)' : 'rgba(76, 175, 80, 0.05)', 
+              borderWidth: 1,
+              borderColor: isDarkMode ? 'rgba(76, 175, 80, 0.2)' : 'rgba(76, 175, 80, 0.1)',
+            }]}>
+              <View style={[styles.adviceIcon, { backgroundColor: isDarkMode ? '#1E1E2E' : '#fff' }]}>
+                <FontAwesomeIcon icon={faAppleAlt} size={22} color="#4CAF50" />
               </View>
               <View style={styles.adviceContent}>
                 <Text style={[styles.adviceText, { color: themeAsAny.colors.text }]}>
@@ -381,34 +529,72 @@ const HomeScreen: React.FunctionComponent<HomeScreenProps> = ({ navigation }) =>
             </View>
           </Card.Content>
           <Card.Actions style={styles.cardActions}>
-            <Button mode="contained" style={[styles.actionButton, { backgroundColor: themeAsAny.colors.primary }]}>Tüm Tavsiyeleri Gör</Button>
+            <Button 
+              mode="contained" 
+              style={[styles.actionButton, { 
+                backgroundColor: primaryColor,
+                shadowColor: primaryColor,
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.25,
+                shadowRadius: 8,
+                elevation: 5
+              }]}
+            >
+              Tüm Tavsiyeleri Gör
+            </Button>
           </Card.Actions>
         </Card>
 
-        {/* Activity Schedule */}
-        <Card style={[styles.card, { backgroundColor: themeAsAny.colors.surface }]}>
+        {/* Activity Schedule - Modern program görünümü */}
+        <Card style={[styles.card, { 
+          backgroundColor: isDarkMode ? '#1E1E2E' : themeAsAny.colors.surface,
+          borderWidth: 0,
+        }]}>
           <Card.Content>
             <View style={styles.sectionTitleContainer}>
-              <FontAwesomeIcon icon={faCalendarCheck} size={24} color={themeAsAny.colors.primary} />
+              <View style={{
+                backgroundColor: `${primaryColor}20`,
+                width: 50, 
+                height: 50, 
+                borderRadius: 25,
+                justifyContent: 'center',
+                alignItems: 'center',
+                shadowColor: primaryColor,
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.2,
+                shadowRadius: 4,
+                elevation: 3
+              }}>
+                <FontAwesomeIcon icon={faCalendarCheck} size={24} color={primaryColor} />
+              </View>
               <Text style={[styles.cardTitle, { color: themeAsAny.colors.text }]}>Günlük Program</Text>
             </View>
-            <View style={styles.activityItem}>
-              <View style={styles.activityTimeContainer}>
-                <Text style={[styles.activityTime, { color: themeAsAny.colors.text }]}>09:00</Text>
+            
+            <View style={[styles.activityItem, { 
+              backgroundColor: isDarkMode ? 'rgba(3, 169, 244, 0.1)' : 'rgba(3, 169, 244, 0.05)',
+              borderWidth: 1,
+              borderColor: isDarkMode ? 'rgba(3, 169, 244, 0.2)' : 'rgba(3, 169, 244, 0.1)',
+            }]}>
+              <View style={[styles.activityTimeContainer, { backgroundColor: isDarkMode ? '#1E1E2E' : '#fff' }]}>
+                <Text style={[styles.activityTime, { color: '#03A9F4' }]}>09:00</Text>
               </View>
               <View style={styles.activityContentContainer}>
                 <Text style={[styles.activityName, { color: themeAsAny.colors.text }]}>Sabah Yürüyüşü</Text>
-                <Text style={styles.activityDuration}>30 dakika</Text>
+                <Text style={[styles.activityDuration, { color: themeAsAny.colors.textSecondary || '#666' }]}>30 dakika</Text>
               </View>
             </View>
 
-            <View style={styles.activityItem}>
-              <View style={styles.activityTimeContainer}>
-                <Text style={[styles.activityTime, { color: themeAsAny.colors.text }]}>18:30</Text>
+            <View style={[styles.activityItem, { 
+              backgroundColor: isDarkMode ? 'rgba(156, 39, 176, 0.1)' : 'rgba(156, 39, 176, 0.05)',
+              borderWidth: 1,
+              borderColor: isDarkMode ? 'rgba(156, 39, 176, 0.2)' : 'rgba(156, 39, 176, 0.1)',
+            }]}>
+              <View style={[styles.activityTimeContainer, { backgroundColor: isDarkMode ? '#1E1E2E' : '#fff' }]}>
+                <Text style={[styles.activityTime, { color: '#9C27B0' }]}>18:30</Text>
               </View>
               <View style={styles.activityContentContainer}>
                 <Text style={[styles.activityName, { color: themeAsAny.colors.text }]}>Yoga</Text>
-                <Text style={styles.activityDuration}>45 dakika</Text>
+                <Text style={[styles.activityDuration, { color: themeAsAny.colors.textSecondary || '#666' }]}>45 dakika</Text>
               </View>
             </View>
           </Card.Content>
@@ -416,23 +602,53 @@ const HomeScreen: React.FunctionComponent<HomeScreenProps> = ({ navigation }) =>
             <Button
               mode="contained"
               onPress={() => navigation.navigate('ExerciseTracker')}
-              style={[styles.actionButton, { backgroundColor: themeAsAny.colors.primary }]}
+              style={[styles.actionButton, { 
+                backgroundColor: primaryColor,
+                shadowColor: primaryColor,
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.25,
+                shadowRadius: 8,
+                elevation: 5
+              }]}
             >
               Program Detayı
             </Button>
           </Card.Actions>
         </Card>
 
-        {/* Integration Status - DEV ONLY */}
-        <Card style={[styles.card, { backgroundColor: themeAsAny.colors.surface }]}>
+        {/* Debug/Dev Card - Sadece geliştirme aşamasında */}
+        <Card style={[styles.card, { 
+          backgroundColor: isDarkMode ? '#1E1E2E' : themeAsAny.colors.surface,
+          borderWidth: 0,
+          opacity: 0.9
+        }]}>
           <Card.Content>
             <View style={styles.sectionTitleContainer}>
-              <FontAwesomeIcon icon={faSync} size={24} color={themeAsAny.colors.primary} />
+              <View style={{
+                backgroundColor: `${primaryColor}20`,
+                width: 50, 
+                height: 50, 
+                borderRadius: 25,
+                justifyContent: 'center',
+                alignItems: 'center',
+                shadowColor: primaryColor,
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.2,
+                shadowRadius: 4,
+                elevation: 3
+              }}>
+                <FontAwesomeIcon icon={faSync} size={24} color={primaryColor} />
+              </View>
               <Text style={[styles.cardTitle, { color: themeAsAny.colors.text }]}>Entegrasyon Durumu (DEV)</Text>
             </View>
-            <View style={styles.adviceContainer}>
-              <View style={styles.adviceIcon}>
-                <FontAwesomeIcon icon={faWater} size={24} color="#03A9F4" />
+            
+            <View style={[styles.adviceContainer, { 
+              backgroundColor: isDarkMode ? 'rgba(3, 169, 244, 0.1)' : 'rgba(3, 169, 244, 0.05)',
+              borderWidth: 1,
+              borderColor: isDarkMode ? 'rgba(3, 169, 244, 0.2)' : 'rgba(3, 169, 244, 0.1)',
+            }]}>
+              <View style={[styles.adviceIcon, { backgroundColor: isDarkMode ? '#1E1E2E' : '#fff' }]}>
+                <FontAwesomeIcon icon={faWater} size={22} color="#03A9F4" />
               </View>
               <View style={styles.adviceContent}>
                 <Text style={[styles.adviceText, { color: themeAsAny.colors.text }]}>
@@ -443,9 +659,13 @@ const HomeScreen: React.FunctionComponent<HomeScreenProps> = ({ navigation }) =>
               </View>
             </View>
 
-            <View style={styles.adviceContainer}>
-              <View style={styles.adviceIcon}>
-                <FontAwesomeIcon icon={faAppleAlt} size={24} color="#4CAF50" />
+            <View style={[styles.adviceContainer, { 
+              backgroundColor: isDarkMode ? 'rgba(76, 175, 80, 0.1)' : 'rgba(76, 175, 80, 0.05)',
+              borderWidth: 1,
+              borderColor: isDarkMode ? 'rgba(76, 175, 80, 0.2)' : 'rgba(76, 175, 80, 0.1)',
+            }]}>
+              <View style={[styles.adviceIcon, { backgroundColor: isDarkMode ? '#1E1E2E' : '#fff' }]}>
+                <FontAwesomeIcon icon={faAppleAlt} size={22} color="#4CAF50" />
               </View>
               <View style={styles.adviceContent}>
                 <Text style={[styles.adviceText, { color: themeAsAny.colors.text }]}>
@@ -455,9 +675,13 @@ const HomeScreen: React.FunctionComponent<HomeScreenProps> = ({ navigation }) =>
               </View>
             </View>
 
-            <View style={styles.adviceContainer}>
-              <View style={styles.adviceIcon}>
-                <FontAwesomeIcon icon={faDumbbell} size={24} color="#FF9800" />
+            <View style={[styles.adviceContainer, { 
+              backgroundColor: isDarkMode ? 'rgba(255, 152, 0, 0.1)' : 'rgba(255, 152, 0, 0.05)',
+              borderWidth: 1,
+              borderColor: isDarkMode ? 'rgba(255, 152, 0, 0.2)' : 'rgba(255, 152, 0, 0.1)',
+            }]}>
+              <View style={[styles.adviceIcon, { backgroundColor: isDarkMode ? '#1E1E2E' : '#fff' }]}>
+                <FontAwesomeIcon icon={faDumbbell} size={22} color="#FF9800" />
               </View>
               <View style={styles.adviceContent}>
                 <Text style={[styles.adviceText, { color: themeAsAny.colors.text }]}>
@@ -468,17 +692,29 @@ const HomeScreen: React.FunctionComponent<HomeScreenProps> = ({ navigation }) =>
             </View>
           </Card.Content>
           <Card.Actions style={styles.cardActions}>
-            <Button mode="contained" onPress={() => null} style={[styles.actionButton, { backgroundColor: themeAsAny.colors.primary }]}>
+            <Button 
+              mode="contained" 
+              onPress={() => null} 
+              style={[styles.actionButton, { 
+                backgroundColor: primaryColor,
+                opacity: 0.8,
+                shadowColor: primaryColor,
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.25,
+                shadowRadius: 8,
+                elevation: 5
+              }]}
+            >
               Geliştirici Bilgisi
             </Button>
           </Card.Actions>
         </Card>
 
-        {/* Nutrition Status */}
+        {/* Nutrition Status - Modern beslenme kartı */}
         <NutritionCard
           calories={user.calories || 0}
-          caloriesGoal={user.caloriesGoal || 0}
-          primaryColor={themeAsAny.colors.primary}
+          caloriesGoal={user.caloriesGoal || 2500}
+          primaryColor={primaryColor}
           onPress={() => navigation.navigate('CalorieTracker')}
         />
       </ScrollView>
@@ -489,18 +725,22 @@ const HomeScreen: React.FunctionComponent<HomeScreenProps> = ({ navigation }) =>
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   container: {
     flex: 1,
   },
   headerContainer: {
-    padding: 16,
-    backgroundColor: '#4285F4',
-    elevation: 4,
-    margin: 0,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+    padding: 20,
+    paddingTop: 30,
+    paddingBottom: 25,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.2,
+    shadowRadius: 15,
+    elevation: 10,
   },
   headerContent: {
     flexDirection: 'row',
@@ -508,160 +748,197 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   greetingText: {
-    fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 18,
+    fontWeight: '500',
+    opacity: 0.9,
   },
   welcomeText: {
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: 'bold',
-    color: 'white',
+    marginTop: 4,
   },
   dateText: {
     fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.8)',
-    marginTop: 4,
+    marginTop: 8,
+    opacity: 0.8,
   },
   avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    marginLeft: 16,
-    borderWidth: 2,
+    width: 65,
+    height: 65,
+    borderRadius: 32.5,
+    borderWidth: 3,
     borderColor: 'white',
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 8,
   },
   streakChip: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     marginTop: 16,
     alignSelf: 'flex-start',
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
   },
   streakChipText: {
-    color: 'white',
+    fontWeight: 'bold',
   },
   statsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     marginHorizontal: 16,
-    marginTop: 16,
+    marginVertical: 8,
   },
   statsCard: {
     flex: 1,
-    marginHorizontal: 4,
-    borderRadius: 16,
-    elevation: 2,
-    padding: 12,
+    marginHorizontal: 6,
+    borderRadius: 24,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  cardContent: {
-    padding: 12,
+  statsCardContent: {
+    width: '100%',
+  },
+  statsCardHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 12,
+    width: '100%',
   },
   statsIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8,
+    marginRight: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
+    elevation: 6,
+  },
+  statsValueContainer: {
+    flex: 1,
   },
   statsValue: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
+    marginBottom: 4,
   },
   statsLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 8,
+    fontSize: 16,
+    marginBottom: 10,
+    opacity: 0.7,
+  },
+  statsProgressSection: {
+    width: '100%',
+    marginVertical: 10,
   },
   progressBarContainer: {
     width: '100%',
-    height: 6,
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
-    borderRadius: 3,
-    marginVertical: 8,
+    height: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.08)',
+    borderRadius: 4,
+    marginBottom: 6,
     overflow: 'hidden',
   },
   progressBar: {
     height: '100%',
-    borderRadius: 3,
+    borderRadius: 4,
   },
   progressText: {
-    fontSize: 12,
-    color: '#666',
+    fontSize: 14,
+    fontWeight: '600',
+    opacity: 0.8,
+    alignSelf: 'flex-end',
+  },
+  cardContent: {
+    padding: 16,
+    alignItems: 'center',
   },
   card: {
     margin: 16,
-    marginBottom: 0,
-    borderRadius: 16,
-    elevation: 2,
+    marginBottom: 16,
+    borderRadius: 24,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
   },
   lastCard: {
-    marginBottom: 16,
+    marginBottom: 24,
   },
   sectionTitleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
   },
-  sectionTitle: {
-    marginLeft: 8,
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
   cardTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    marginLeft: 8,
+    marginLeft: 12,
   },
   workoutProgressContainer: {
-    marginVertical: 8,
+    marginVertical: 14,
   },
   workoutProgressInfo: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: 10,
+    alignItems: 'center',
   },
   workoutProgressText: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: 16,
+    opacity: 0.8,
   },
   workoutProgressCount: {
     fontWeight: 'bold',
-    fontSize: 16,
-    color: '#333',
+    fontSize: 18,
   },
   workoutProgressPercentage: {
     fontWeight: 'bold',
-    color: '#4CAF50',
+    fontSize: 18,
   },
   workoutProgressBar: {
-    height: 10,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 5,
+    height: 12,
+    backgroundColor: 'rgba(0, 0, 0, 0.08)',
+    borderRadius: 6,
     overflow: 'hidden',
   },
   workoutProgressBarFill: {
     height: '100%',
-    backgroundColor: '#4CAF50',
-    borderRadius: 5,
+    borderRadius: 6,
   },
   adviceContainer: {
     flexDirection: 'row',
     marginBottom: 16,
-    backgroundColor: '#f9f9f9',
-    padding: 12,
-    borderRadius: 12,
+    padding: 16,
+    borderRadius: 18,
   },
   adviceIcon: {
-    marginRight: 12,
+    marginRight: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
   },
   adviceContent: {
     flex: 1,
   },
   adviceText: {
-    fontSize: 14,
-    color: '#333',
+    fontSize: 16,
+    lineHeight: 22,
   },
   adviceBold: {
     fontWeight: 'bold',
@@ -669,76 +946,89 @@ const styles = StyleSheet.create({
   activityItem: {
     flexDirection: 'row',
     marginBottom: 16,
-    backgroundColor: '#f9f9f9',
-    padding: 12,
-    borderRadius: 12,
+    padding: 16,
+    borderRadius: 18,
+    alignItems: 'center',
   },
   activityTimeContainer: {
-    width: 50,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     alignItems: 'center',
-    marginRight: 12,
+    justifyContent: 'center',
+    marginRight: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
   },
   activityTime: {
     fontWeight: 'bold',
-    fontSize: 14,
-    color: '#333',
+    fontSize: 16,
   },
   activityContentContainer: {
     flex: 1,
   },
   activityName: {
     fontWeight: 'bold',
-    fontSize: 16,
-    color: '#333',
+    fontSize: 18,
+    marginBottom: 4,
   },
   activityDuration: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: 16,
+    opacity: 0.7,
   },
   nutritionContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
+    justifyContent: 'space-around',
+    marginVertical: 10,
+    paddingVertical: 10,
   },
   nutritionItem: {
     alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.14)',
+    padding: 16,
+    borderRadius: 16,
+    width: '30%',
   },
   nutritionLabel: {
     fontSize: 14,
-    color: '#666',
+    opacity: 0.8,
+    marginBottom: 4,
   },
   nutritionValue: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#333',
+    marginVertical: 4,
   },
   nutritionUnit: {
-    fontSize: 12,
-    color: '#666',
+    fontSize: 14,
+    opacity: 0.7,
   },
   cardActions: {
-    justifyContent: 'flex-end',
     paddingHorizontal: 16,
     paddingBottom: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   actionButton: {
-    borderRadius: 8,
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    width: '100%',
   },
   actionButtonText: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 'bold',
     color: 'white',
+    textAlign: 'center',
   },
   customButtonContainer: {
-    marginTop: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    backgroundColor: '#3F51B5',
-    borderRadius: 4,
+    marginTop: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 12,
     alignItems: 'center',
   },
   customButtonText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: 'bold',
     color: 'white',
   },

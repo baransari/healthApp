@@ -7,6 +7,9 @@ import {
   Platform,
   Alert,
   ScrollView,
+  SafeAreaView,
+  StatusBar,
+  Dimensions,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -18,6 +21,15 @@ import {
 } from '../../utils/paperComponents';
 import { useTheme } from '../../context/ThemeContext';
 import { isValidEmail } from '../../utils/validation';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { 
+  faEnvelope, 
+  faArrowLeft,
+  faShieldAlt,
+  faPaperPlane
+} from '@fortawesome/free-solid-svg-icons';
+
+const { width, height } = Dimensions.get('window');
 
 type ForgotPasswordScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -31,12 +43,14 @@ type Props = {
 const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { theme } = useTheme();
   const themeAsAny = theme as any;
+  const isDarkMode = themeAsAny.dark;
 
   const validateForm = (): boolean => {
     if (!isValidEmail(email)) {
-      setEmailError('Please enter a valid email address');
+      setEmailError('Lütfen geçerli bir e-posta adresi girin');
       return false;
     }
     setEmailError('');
@@ -48,87 +62,187 @@ const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
       return;
     }
 
-    // Here you would typically make an API call to send reset password email
-    // For now, we'll just simulate success
-    Alert.alert(
-      'Success',
-      'If an account exists with this email, you will receive password reset instructions.',
-      [
-        {
-          text: 'OK',
-          onPress: () => navigation.navigate('Login'),
-        },
-      ],
-    );
+    setIsSubmitting(true);
+
+    // Şifre sıfırlama başarılı olursa
+    setTimeout(() => {
+      setIsSubmitting(false);
+      Alert.alert(
+        'Başarılı',
+        'Bu e-posta adresine sahip bir hesap varsa, şifre sıfırlama talimatlarını alacaksınız.',
+        [
+          {
+            text: 'Tamam',
+            onPress: () => navigation.navigate('Login'),
+          },
+        ],
+      );
+    }, 1500);
   };
 
+  const headerBackgroundColor = isDarkMode 
+    ? themeAsAny.colors.primary + '80' 
+    : themeAsAny.colors.primary;
+
+  const cardBackgroundColor = isDarkMode 
+    ? '#1E1E2E' 
+    : '#FFFFFF';
+
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={[styles.container, { backgroundColor: themeAsAny.colors.background }]}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={styles.formContainer}>
-          <PaperText
-            variant="headlineLarge"
-            style={{ color: themeAsAny.colors.primary, marginBottom: 24, textAlign: 'center' }}
-          >
-            Reset Password
-          </PaperText>
-
-          <PaperText
-            variant="bodyLarge"
-            style={{ color: themeAsAny.colors.onSurfaceVariant, marginBottom: 24, textAlign: 'center' }}
-          >
-            Enter your email address and we'll send you instructions to reset your password.
-          </PaperText>
-
-          <PaperTextInput
-            label="Email"
-            value={email}
-            onChangeText={(text: string) => {
-              setEmail(text);
-              if (emailError) setEmailError('');
-            }}
-            mode="outlined"
-            style={styles.input}
-            error={!!emailError}
-            keyboardType="email-address"
-            autoCapitalize="none"
+    <SafeAreaView style={[styles.container, { backgroundColor: themeAsAny.colors.background }]}>
+      <StatusBar 
+        barStyle={isDarkMode ? 'light-content' : 'dark-content'} 
+        backgroundColor="transparent"
+        translucent 
+      />
+      
+      {/* Header Section */}
+      <View style={[
+        styles.headerContainer, 
+        { 
+          backgroundColor: headerBackgroundColor,
+          shadowColor: themeAsAny.colors.primary,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.25,
+          shadowRadius: 8,
+          elevation: 8
+        }
+      ]}>
+        <TouchableOpacity 
+          style={styles.backButton} 
+          onPress={() => navigation.goBack()}
+        >
+          <FontAwesomeIcon 
+            icon={faArrowLeft} 
+            size={24} 
+            color="white" 
           />
-          {emailError ? (
+        </TouchableOpacity>
+
+        <View style={styles.logoCircle}>
+          <FontAwesomeIcon 
+            icon={faShieldAlt} 
+            size={40} 
+            color="#FFF" 
+          />
+        </View>
+        <PaperText
+          variant="headlineMedium"
+          style={styles.logoText}
+        >
+          Şifre Sıfırlama
+        </PaperText>
+      </View>
+
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContainer}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={[
+            styles.formCard, 
+            { 
+              backgroundColor: cardBackgroundColor,
+              shadowColor: isDarkMode ? themeAsAny.colors.primary : '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: isDarkMode ? 0.3 : 0.1,
+              shadowRadius: 12,
+              elevation: 8 
+            }
+          ]}>
             <PaperText
-              variant="labelSmall"
-              style={{ color: themeAsAny.colors.error, marginBottom: 8 }}
+              variant="bodyLarge"
+              style={[styles.formDescription, { color: themeAsAny.colors.onSurfaceVariant }]}
             >
-              {emailError}
+              E-posta adresinizi girin ve şifrenizi sıfırlamak için talimatları göndereceğiz.
             </PaperText>
-          ) : null}
 
-          <Button
-            mode="contained"
-            style={styles.button}
-            contentStyle={{ backgroundColor: themeAsAny.colors.primary }}
-            labelStyle={styles.buttonText}
-            onPress={handleResetPassword}
+            <View style={styles.inputContainer}>
+              <FontAwesomeIcon 
+                icon={faEnvelope} 
+                size={20} 
+                color={themeAsAny.colors.primary} 
+                style={styles.inputIcon}
+              />
+              <PaperTextInput
+                label="E-posta"
+                value={email}
+                onChangeText={(text: string) => {
+                  setEmail(text);
+                  if (emailError) setEmailError('');
+                }}
+                mode="outlined"
+                style={[styles.input, { backgroundColor: 'transparent' }]}
+                error={!!emailError}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                outlineColor={isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)'}
+                activeOutlineColor={themeAsAny.colors.primary}
+              />
+            </View>
+            {emailError ? (
+              <PaperText
+                variant="labelSmall"
+                style={[styles.errorText, { color: themeAsAny.colors.error }]}
+              >
+                {emailError}
+              </PaperText>
+            ) : null}
+
+            <TouchableOpacity
+              style={[
+                styles.resetButton, 
+                { 
+                  backgroundColor: themeAsAny.colors.primary,
+                  shadowColor: themeAsAny.colors.primary,
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.3,
+                  shadowRadius: 8,
+                  elevation: 5,
+                  opacity: isSubmitting ? 0.7 : 1
+                }
+              ]}
+              onPress={handleResetPassword}
+              disabled={isSubmitting}
+            >
+              <PaperText variant="titleMedium" style={styles.resetButtonText}>
+                {isSubmitting ? 'Gönderiliyor...' : 'Talimatları Gönder'}
+              </PaperText>
+              {!isSubmitting && (
+                <FontAwesomeIcon 
+                  icon={faPaperPlane} 
+                  size={18} 
+                  color="#FFFFFF" 
+                  style={styles.resetButtonIcon}
+                />
+              )}
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity 
+            style={styles.loginLink} 
+            onPress={() => navigation.navigate('Login')}
           >
-            Send Instructions
-          </Button>
-
-          <TouchableOpacity style={styles.linkButton} onPress={() => navigation.navigate('Login')}>
+            <FontAwesomeIcon 
+              icon={faArrowLeft} 
+              size={16} 
+              color={themeAsAny.colors.primary} 
+              style={{ marginRight: 8 }}
+            />
             <PaperText
-              variant="labelLarge"
+              variant="titleMedium"
               style={{ color: themeAsAny.colors.primary }}
             >
-              Back to Login
+              Giriş Ekranına Dön
             </PaperText>
           </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
@@ -136,28 +250,103 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  headerContainer: {
+    paddingTop: StatusBar.currentHeight || 40,
+    paddingBottom: 24,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  },
+  backButton: {
+    position: 'absolute',
+    top: StatusBar.currentHeight ? StatusBar.currentHeight + 10 : 50,
+    left: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  logoCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 10,
+  },
+  logoText: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  keyboardView: {
+    flex: 1,
+  },
   scrollContainer: {
     flexGrow: 1,
-    justifyContent: 'center',
     padding: 20,
   },
-  formContainer: {
+  formCard: {
+    borderRadius: 20,
+    padding: 24,
     width: '100%',
+    marginTop: -20,
   },
-  input: {
+  formDescription: {
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 22,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 8,
   },
-  button: {
-    marginTop: 16,
-    paddingVertical: 8,
+  inputIcon: {
+    marginRight: 12,
+    marginLeft: 4,
+    marginTop: 8,
   },
-  buttonText: {
-    fontSize: 16,
+  input: {
+    flex: 1,
+    marginBottom: 4,
+  },
+  errorText: {
+    marginLeft: 36,
+    marginBottom: 12,
+  },
+  resetButton: {
+    height: 56,
+    borderRadius: 28,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 16,
+  },
+  resetButtonText: {
+    color: '#FFFFFF',
     fontWeight: 'bold',
   },
-  linkButton: {
-    marginTop: 16,
+  resetButtonIcon: {
+    marginLeft: 12,
+  },
+  loginLink: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 32,
+    padding: 12,
   },
 });
 

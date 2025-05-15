@@ -8,9 +8,19 @@ import {
   Modal,
   Platform,
   Alert,
+  SafeAreaView,
+  Image,
 } from 'react-native';
-import { Card, Title, Paragraph, Button, Divider } from '../utils/paperComponents';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import {
+  Card,
+  Title,
+  Paragraph, 
+  Button,
+  Divider,
+  Surface,
+  Chip,
+  ProgressBar,
+} from '../utils/paperComponents';
 import { useAppSelector, useAppDispatch } from '../store';
 import { RootState } from '../store';
 import {
@@ -23,10 +33,28 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { v4 as uuidv4 } from 'uuid';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
-import { faBed, faPlus, faMoon, faSun, faClock } from '@fortawesome/free-solid-svg-icons';
+import { 
+  faBed, 
+  faPlus, 
+  faMoon, 
+  faSun, 
+  faClock,
+  faCalendarCheck,
+  faChartLine,
+  faLightbulb,
+  faBrain,
+  faHistory,
+  faHeartbeat,
+  faChartBar,
+  faCheck,
+  faClose,
+  faHandSparkles,
+  faHourglass,
+  faCalendarAlt,
+} from '@fortawesome/free-solid-svg-icons';
 import StorageService from '../services/StorageService';
 import { useFocusEffect } from '@react-navigation/native';
-import useTheme from '../hooks/useTheme';
+import { useTheme } from '../hooks/useTheme';
 
 interface SleepTrackerScreenProps {
   navigation: any;
@@ -108,6 +136,15 @@ const SleepTrackerScreen: React.FC<SleepTrackerScreenProps> = ({ navigation }) =
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', weekday: 'long' });
+  };
+
+  // Get the formatted date for header
+  const getFormattedDate = () => {
+    return new Date().toLocaleDateString('tr-TR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    });
   };
 
   // AI Öneri oluşturma
@@ -263,108 +300,383 @@ const SleepTrackerScreen: React.FC<SleepTrackerScreenProps> = ({ navigation }) =
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: themeAsAny.colors.background }]}>
-      <View style={[styles.header, { backgroundColor: themeAsAny.colors.primary }]}>
-        <Text style={styles.headerTitle}>Uyku Takibi</Text>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
+      {/* Header Section - Modern and vibrant design */}
+      <View style={[styles.headerContainer, { backgroundColor: theme.colors.primary }]}>
+        <View style={styles.headerContent}>
+          <View>
+            <Text style={[styles.headerSubtitle, { color: 'rgba(255, 255, 255, 0.9)' }]}>
+              Sağlıklı Yaşam
+            </Text>
+            <Text style={[styles.headerTitle, { color: '#fff' }]}>
+              Uyku Takibi
+            </Text>
+            <Text style={[styles.headerInfo, { color: 'rgba(255, 255, 255, 0.9)' }]}>
+              {getFormattedDate()}
+            </Text>
+          </View>
+          <TouchableOpacity>
+            <View style={styles.avatarContainer}>
+              <FontAwesomeIcon icon={faBed} size={24} color="#fff" />
+            </View>
+          </TouchableOpacity>
+        </View>
+
+        {/* Sleep Goal Chip */}
+        <Chip
+          icon={({ size, color }: { size: number; color: string }) => (
+            <FontAwesomeIcon icon={faMoon} size={size} color="#8A2BE2" />
+          )}
+          style={[styles.goalChip, { 
+            backgroundColor: 'rgba(255, 255, 255, 0.25)',
+            borderWidth: 1,
+            borderColor: 'rgba(255, 255, 255, 0.5)'
+          }]}
+          textStyle={[styles.goalChipText, { color: '#fff' }]}
+        >
+          Hedef: {sleepGoal || 8} saat uyku
+        </Chip>
       </View>
 
-      <ScrollView style={styles.content}>
+      <ScrollView 
+        style={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 20 }}
+      >
         {loading ? (
-          <Card style={[styles.card, { backgroundColor: themeAsAny.colors.surface }]}>
-            <Card.Content>
-              <Text style={{ color: themeAsAny.colors.onSurface }}>Yükleniyor...</Text>
+          <Card style={[styles.card, { 
+            backgroundColor: isDarkMode ? '#1E1E2E' : theme.colors.surface,
+            borderRadius: 24,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.1,
+            shadowRadius: 12,
+            elevation: 8,
+            margin: 16
+          }]}>
+            <Card.Content style={styles.cardContent}>
+              <View style={styles.loadingContainer}>
+                <Text style={{ color: theme.colors.onSurface }}>Uyku verileri yükleniyor...</Text>
+              </View>
             </Card.Content>
           </Card>
         ) : lastSleep ? (
-          <Card style={[styles.sleepSummaryCard, { backgroundColor: themeAsAny.colors.surface }]}>
-            <Card.Content>
-              <Title style={{ color: themeAsAny.colors.onSurface }}>Son Uyku Özeti</Title>
+          <Card style={[styles.card, { 
+            backgroundColor: isDarkMode ? '#1E1E2E' : theme.colors.surface,
+            borderRadius: 24,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.1,
+            shadowRadius: 12,
+            elevation: 8,
+            margin: 16
+          }]}>
+            <Card.Content style={styles.cardContent}>
+              <View style={styles.sectionTitleContainer}>
+                <View style={{
+                  backgroundColor: `${theme.colors.primary}20`,
+                  width: 50, 
+                  height: 50, 
+                  borderRadius: 25,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  shadowColor: theme.colors.primary,
+                  shadowOffset: { width: 0, height: 3 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 4,
+                  elevation: 3
+                }}>
+                  <FontAwesomeIcon icon={faBed} size={24} color={theme.colors.primary} />
+                </View>
+                <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>Son Uyku Özeti</Text>
+              </View>
+              
               <View style={styles.sleepSummary}>
                 <View style={styles.sleepTime}>
-                  <FontAwesomeIcon icon={faMoon} size={24} color={themeAsAny.colors.primary} />
-                  <Text style={[styles.timeLabel, { color: themeAsAny.colors.onSurfaceVariant }]}>Yatış</Text>
-                  <Text style={[styles.timeValue, { color: themeAsAny.colors.onSurface }]}>{lastSleep.startTime}</Text>
+                  <View style={[styles.timeIconContainer, { backgroundColor: `${theme.colors.primary}15` }]}>
+                    <FontAwesomeIcon icon={faMoon} size={20} color={theme.colors.primary} />
+                  </View>
+                  <Text style={[styles.timeLabel, { color: theme.colors.onSurfaceVariant }]}>Yatış</Text>
+                  <Text style={[styles.timeValue, { color: theme.colors.onSurface }]}>{lastSleep.startTime}</Text>
                 </View>
+                
                 <View style={styles.sleepDuration}>
-                  <Text style={[styles.durationValue, { color: themeAsAny.colors.primary }]}>{lastSleep.duration}s</Text>
-                  <FontAwesomeIcon icon={faBed} size={32} color={themeAsAny.colors.primary} />
+                  <Text style={[styles.durationValue, { color: theme.colors.primary }]}>{lastSleep.duration}s</Text>
+                  <View style={[styles.durationIconContainer, { backgroundColor: `${theme.colors.primary}15` }]}>
+                    <FontAwesomeIcon icon={faHourglass} size={20} color={theme.colors.primary} />
+                  </View>
                 </View>
+                
                 <View style={styles.sleepTime}>
-                  <FontAwesomeIcon icon={faSun} size={24} color={themeAsAny.colors.primary} />
-                  <Text style={[styles.timeLabel, { color: themeAsAny.colors.onSurfaceVariant }]}>Kalkış</Text>
-                  <Text style={[styles.timeValue, { color: themeAsAny.colors.onSurface }]}>{lastSleep.endTime}</Text>
+                  <View style={[styles.timeIconContainer, { backgroundColor: `${theme.colors.primary}15` }]}>
+                    <FontAwesomeIcon icon={faSun} size={20} color={theme.colors.primary} />
+                  </View>
+                  <Text style={[styles.timeLabel, { color: theme.colors.onSurfaceVariant }]}>Kalkış</Text>
+                  <Text style={[styles.timeValue, { color: theme.colors.onSurface }]}>{lastSleep.endTime}</Text>
                 </View>
               </View>
-              <View
-                style={[
-                  styles.qualityIndicator,
-                  { backgroundColor: getQualityColor(lastSleep.quality) },
-                ]}
-              >
-                <Text style={styles.qualityText}>
-                  {getQualityEmoji(lastSleep.quality)} Uyku Kalitesi:{' '}
-                  {lastSleep.quality === 'poor'
-                    ? 'Kötü'
-                    : lastSleep.quality === 'fair'
-                    ? 'Orta'
-                    : lastSleep.quality === 'good'
-                    ? 'İyi'
-                    : 'Mükemmel'}
-                </Text>
+              
+              <View style={[styles.qualityContainer, { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)' }]}>
+                <View style={[styles.qualityIconContainer, { backgroundColor: getQualityColor(lastSleep.quality) }]}>
+                  <Text style={styles.qualityEmoji}>{getQualityEmoji(lastSleep.quality)}</Text>
+                </View>
+                <View style={styles.qualityTextContainer}>
+                  <Text style={[styles.qualityLabel, { color: theme.colors.onSurfaceVariant }]}>Uyku Kalitesi</Text>
+                  <Text style={[styles.qualityValue, { color: getQualityColor(lastSleep.quality) }]}>
+                    {lastSleep.quality === 'poor'
+                      ? 'Kötü'
+                      : lastSleep.quality === 'fair'
+                      ? 'Orta'
+                      : lastSleep.quality === 'good'
+                      ? 'İyi'
+                      : 'Mükemmel'}
+                  </Text>
+                </View>
+              </View>
+              
+              {/* Progress towards sleep goal */}
+              <View style={styles.sleepGoalContainer}>
+                <View style={styles.sleepGoalHeader}>
+                  <Text style={[styles.sleepGoalText, { color: theme.colors.onSurfaceVariant }]}>Günlük Hedef: {sleepGoal} saat</Text>
+                  <Text style={[styles.sleepGoalPercentage, { color: theme.colors.primary }]}>
+                    {Math.min(Math.round((lastSleep.duration / sleepGoal) * 100), 100)}%
+                  </Text>
+                </View>
+                <ProgressBar
+                  progress={Math.min(lastSleep.duration / sleepGoal, 1)}
+                  color={theme.colors.primary}
+                  style={styles.sleepGoalProgressBar}
+                />
               </View>
             </Card.Content>
           </Card>
         ) : (
-          <Card style={[styles.card, { backgroundColor: themeAsAny.colors.surface }]}>
-            <Card.Content>
-              <Title style={{ color: themeAsAny.colors.onSurface }}>Uyku Kaydı Bulunamadı</Title>
-              <Paragraph style={{ color: themeAsAny.colors.onSurfaceVariant }}>İlk uyku kaydınızı ekleyin.</Paragraph>
+          <Card style={[styles.card, { 
+            backgroundColor: isDarkMode ? '#1E1E2E' : theme.colors.surface,
+            borderRadius: 24,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.1,
+            shadowRadius: 12,
+            elevation: 8,
+            margin: 16
+          }]}>
+            <Card.Content style={styles.cardContent}>
+              <View style={styles.sectionTitleContainer}>
+                <View style={{
+                  backgroundColor: `${theme.colors.primary}20`,
+                  width: 50, 
+                  height: 50, 
+                  borderRadius: 25,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  shadowColor: theme.colors.primary,
+                  shadowOffset: { width: 0, height: 3 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 4,
+                  elevation: 3
+                }}>
+                  <FontAwesomeIcon icon={faBed} size={24} color={theme.colors.primary} />
+                </View>
+                <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>Uyku Kaydı Bulunamadı</Text>
+              </View>
+              <Text style={[styles.emptyStateText, { color: theme.colors.onSurfaceVariant }]}>
+                Henüz bir uyku kaydınız bulunmuyor. İlk uyku kaydınızı eklemek için aşağıdaki butonu kullanabilirsiniz.
+              </Text>
             </Card.Content>
           </Card>
         )}
 
-        <Card style={[styles.card, { backgroundColor: themeAsAny.colors.surface }]}>
-          <Card.Content>
-            <Title style={{ color: themeAsAny.colors.onSurface }}>Uyku İstatistikleri</Title>
-            <View style={styles.statsRow}>
-              <View style={styles.statItem}>
-                <Text style={[styles.statValue, { color: themeAsAny.colors.primary }]}>{calculateAverageSleepDuration()}s</Text>
-                <Text style={[styles.statLabel, { color: themeAsAny.colors.onSurfaceVariant }]}>Ort. Süre</Text>
+        {/* Sleep Statistics Card */}
+        <Card style={[styles.card, { 
+          backgroundColor: isDarkMode ? '#1E1E2E' : theme.colors.surface,
+          borderRadius: 24,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.1,
+          shadowRadius: 12,
+          elevation: 8,
+          margin: 16,
+          marginTop: 8
+        }]}>
+          <Card.Content style={styles.cardContent}>
+            <View style={styles.sectionTitleContainer}>
+              <View style={{
+                backgroundColor: `${theme.colors.primary}20`,
+                width: 50, 
+                height: 50, 
+                borderRadius: 25,
+                justifyContent: 'center',
+                alignItems: 'center',
+                shadowColor: theme.colors.primary,
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.2,
+                shadowRadius: 4,
+                elevation: 3
+              }}>
+                <FontAwesomeIcon icon={faChartLine} size={24} color={theme.colors.primary} />
               </View>
-              <View style={styles.statItem}>
-                <Text style={[styles.statValue, { color: themeAsAny.colors.primary }]}>{entries.length}</Text>
-                <Text style={[styles.statLabel, { color: themeAsAny.colors.onSurfaceVariant }]}>Kayıt Sayısı</Text>
+              <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>Uyku İstatistikleri</Text>
+            </View>
+
+            <View style={styles.statsGrid}>
+              <View style={[styles.statCard, { 
+                backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.07)' : 'rgba(30, 136, 229, 0.1)',
+                borderWidth: 1,
+                borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(30, 136, 229, 0.2)',
+              }]}>
+                <View style={styles.statIconContainer}>
+                  <FontAwesomeIcon icon={faClock} size={20} color="#1E88E5" />
+                </View>
+                <Text style={styles.statLabel}>Ortalama Süre</Text>
+                <Text style={[styles.statValue, { color: "#1E88E5" }]}>{calculateAverageSleepDuration()}s</Text>
               </View>
-              <View style={styles.statItem}>
-                <Text style={[styles.statValue, { color: themeAsAny.colors.primary }]}>
-                  {entries.length > 0 ? entries[0].startTime : '--:--'}
+              
+              <View style={[styles.statCard, { 
+                backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.07)' : 'rgba(255, 87, 34, 0.1)',
+                borderWidth: 1,
+                borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 87, 34, 0.2)',
+              }]}>
+                <View style={styles.statIconContainer}>
+                  <FontAwesomeIcon icon={faCalendarCheck} size={20} color="#FF5722" />
+                </View>
+                <Text style={styles.statLabel}>Kayıt Sayısı</Text>
+                <Text style={[styles.statValue, { color: "#FF5722" }]}>{entries.length}</Text>
+              </View>
+              
+              <View style={[styles.statCard, { 
+                backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.07)' : 'rgba(76, 175, 80, 0.1)',
+                borderWidth: 1,
+                borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(76, 175, 80, 0.2)',
+              }]}>
+                <View style={styles.statIconContainer}>
+                  <FontAwesomeIcon icon={faHeartbeat} size={20} color="#4CAF50" />
+                </View>
+                <Text style={styles.statLabel}>Uyku Kalitesi</Text>
+                <Text style={[styles.statValue, { color: "#4CAF50" }]}>
+                  {entries.length > 0 ? 
+                    (entries[0].quality === 'poor' ? 'Kötü' :
+                    entries[0].quality === 'fair' ? 'Orta' :
+                    entries[0].quality === 'good' ? 'İyi' : 'Mükemmel')
+                    : '---'}
                 </Text>
-                <Text style={[styles.statLabel, { color: themeAsAny.colors.onSurfaceVariant }]}>Son Yatış</Text>
               </View>
             </View>
           </Card.Content>
         </Card>
 
-        <Card style={[styles.card, { backgroundColor: themeAsAny.colors.surface }]}>
-          <Card.Content>
-            <Title style={{ color: themeAsAny.colors.onSurface }}>AI Uyku Tavsiyeleri</Title>
-            <Paragraph style={{ color: themeAsAny.colors.onSurfaceVariant }}>{getSleepRecommendation()}</Paragraph>
-            <Paragraph style={[styles.recommendationText, { color: themeAsAny.colors.onSurfaceVariant }]}>
-              Daha iyi bir uyku için yatmadan 1 saat önce ekranlardan uzak durun ve kafein
-              tüketimini öğleden sonra sınırlayın. Ayrıca yatak odasının karanlık ve serin (18-20°C)
-              olması önemlidir.
-            </Paragraph>
+        {/* AI Recommendations Card */}
+        <Card style={[styles.card, { 
+          backgroundColor: isDarkMode ? '#1E1E2E' : theme.colors.surface,
+          borderRadius: 24,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.1,
+          shadowRadius: 12,
+          elevation: 8,
+          margin: 16,
+          marginTop: 8
+        }]}>
+          <Card.Content style={styles.cardContent}>
+            <View style={styles.sectionTitleContainer}>
+              <View style={{
+                backgroundColor: `${theme.colors.primary}20`,
+                width: 50, 
+                height: 50, 
+                borderRadius: 25,
+                justifyContent: 'center',
+                alignItems: 'center',
+                shadowColor: theme.colors.primary,
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.2,
+                shadowRadius: 4,
+                elevation: 3
+              }}>
+                <FontAwesomeIcon icon={faBrain} size={24} color={theme.colors.primary} />
+              </View>
+              <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>AI Uyku Tavsiyeleri</Text>
+            </View>
+            
+            <View style={[styles.adviceContainer, { 
+              backgroundColor: isDarkMode ? 'rgba(255, 193, 7, 0.1)' : 'rgba(255, 193, 7, 0.05)',
+              borderWidth: 1,
+              borderColor: isDarkMode ? 'rgba(255, 193, 7, 0.2)' : 'rgba(255, 193, 7, 0.1)',
+              borderRadius: 16,
+              padding:
+              16,
+              marginBottom: 16
+            }]}>
+              <View style={[styles.adviceIcon, { backgroundColor: isDarkMode ? '#1E1E2E' : '#fff' }]}>
+                <FontAwesomeIcon icon={faLightbulb} size={22} color="#FFC107" />
+              </View>
+              <View style={styles.adviceContent}>
+                <Text style={[styles.adviceText, { color: theme.colors.onSurface }]}>
+                  {getSleepRecommendation()}
+                </Text>
+              </View>
+            </View>
+
+            <View style={[styles.adviceContainer, { 
+              backgroundColor: isDarkMode ? 'rgba(76, 175, 80, 0.1)' : 'rgba(76, 175, 80, 0.05)',
+              borderWidth: 1,
+              borderColor: isDarkMode ? 'rgba(76, 175, 80, 0.2)' : 'rgba(76, 175, 80, 0.1)',
+              borderRadius: 16,
+              padding: 16
+            }]}>
+              <View style={[styles.adviceIcon, { backgroundColor: isDarkMode ? '#1E1E2E' : '#fff' }]}>
+                <FontAwesomeIcon icon={faMoon} size={22} color="#4CAF50" />
+              </View>
+              <View style={styles.adviceContent}>
+                <Text style={[styles.adviceText, { color: theme.colors.onSurface }]}>
+                  Daha iyi bir uyku için yatmadan 1 saat önce ekranlardan uzak durun ve kafein tüketimini öğleden sonra sınırlayın. Ayrıca yatak odasının karanlık ve serin (18-20°C) olması önemlidir.
+                </Text>
+              </View>
+            </View>
           </Card.Content>
         </Card>
 
-        <Title style={[styles.historyTitle, { color: themeAsAny.colors.onSurface }]}>Uyku Geçmişi</Title>
+        {/* Sleep History Section */}
+        <View style={styles.historyHeaderContainer}>
+          <View style={styles.sectionTitleContainer}>
+            <View style={{
+              backgroundColor: `${theme.colors.primary}20`,
+              width: 50, 
+              height: 50, 
+              borderRadius: 25,
+              justifyContent: 'center',
+              alignItems: 'center',
+              shadowColor: theme.colors.primary,
+              shadowOffset: { width: 0, height: 3 },
+              shadowOpacity: 0.2,
+              shadowRadius: 4,
+              elevation: 3
+            }}>
+              <FontAwesomeIcon icon={faHistory} size={24} color={theme.colors.primary} />
+            </View>
+            <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>Uyku Geçmişi</Text>
+          </View>
+        </View>
 
         {entries.length > 0 ? (
           entries.map(entry => (
-            <Card key={entry.id} style={[styles.historyCard, { backgroundColor: themeAsAny.colors.surface }]}>
-              <Card.Content>
+            <Card key={entry.id} style={[styles.card, { 
+              backgroundColor: isDarkMode ? '#1E1E2E' : theme.colors.surface,
+              borderRadius: 24,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.1,
+              shadowRadius: 12,
+              elevation: 8,
+              margin: 16,
+              marginTop: 8,
+              marginBottom: 12
+            }]}>
+              <Card.Content style={styles.cardContent}>
                 <View style={styles.historyHeader}>
-                  <Text style={[styles.historyDate, { color: themeAsAny.colors.onSurface }]}>{formatDate(entry.date)}</Text>
+                  <View style={styles.historyDateContainer}>
+                    <FontAwesomeIcon icon={faCalendarAlt} size={16} color={theme.colors.primary} style={{ marginRight: 8 }} />
+                    <Text style={[styles.historyDate, { color: theme.colors.onSurface }]}>{formatDate(entry.date)}</Text>
+                  </View>
                   <View
                     style={[
                       styles.historyQuality,
@@ -382,25 +694,27 @@ const SleepTrackerScreen: React.FC<SleepTrackerScreenProps> = ({ navigation }) =
                     </Text>
                   </View>
                 </View>
-                <Divider style={styles.divider} />
+                <Divider style={[styles.divider, { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)' }]} />
                 <View style={styles.historyDetails}>
                   <View style={styles.historyTime}>
-                    <FontAwesomeIcon icon={faMoon} size={16} color={themeAsAny.colors.onSurfaceVariant} />
-                    <Text style={[styles.historyTimeText, { color: themeAsAny.colors.onSurface }]}>{entry.startTime}</Text>
+                    <FontAwesomeIcon icon={faMoon} size={16} color={theme.colors.primary} />
+                    <Text style={[styles.historyTimeText, { color: theme.colors.onSurface }]}>{entry.startTime}</Text>
                   </View>
-                  <View style={[styles.historyDuration, { backgroundColor: themeAsAny.colors.surfaceVariant }]}>
-                    <Text style={[styles.historyDurationText, { color: themeAsAny.colors.onSurfaceVariant }]}>{entry.duration} saat</Text>
+                  <View style={[styles.historyDuration, { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : theme.colors.surfaceVariant }]}>
+                    <Text style={[styles.historyDurationText, { color: theme.colors.onSurfaceVariant }]}>{entry.duration} saat</Text>
                   </View>
                   <View style={styles.historyTime}>
-                    <FontAwesomeIcon icon={faSun} size={16} color={themeAsAny.colors.onSurfaceVariant} />
-                    <Text style={[styles.historyTimeText, { color: themeAsAny.colors.onSurface }]}>{entry.endTime}</Text>
+                    <FontAwesomeIcon icon={faSun} size={16} color={theme.colors.primary} />
+                    <Text style={[styles.historyTimeText, { color: theme.colors.onSurface }]}>{entry.endTime}</Text>
                   </View>
                 </View>
               </Card.Content>
             </Card>
           ))
         ) : (
-          <Text style={[styles.noDataText, { color: themeAsAny.colors.onSurfaceVariant }]}>Henüz kayıt bulunmuyor</Text>
+          <View style={styles.emptyHistoryContainer}>
+            <Text style={[styles.noDataText, { color: theme.colors.onSurfaceVariant }]}>Henüz kayıt bulunmuyor</Text>
+          </View>
         )}
 
         <Button
@@ -408,8 +722,17 @@ const SleepTrackerScreen: React.FC<SleepTrackerScreenProps> = ({ navigation }) =
           icon={({ size, color }: { size: number; color: string }) => (
             <FontAwesomeIcon icon={faPlus} size={size} color={color} />
           )}
-          style={styles.addButton}
-          buttonColor={themeAsAny.colors.primary}
+          style={[styles.addButton, { 
+            backgroundColor: theme.colors.primary,
+            borderRadius: 12,
+            margin: 16,
+            marginTop: 8,
+            shadowColor: theme.colors.primary,
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.25,
+            shadowRadius: 8,
+            elevation: 5
+          }]}
           onPress={() => setModalVisible(true)}
         >
           Yeni Uyku Kaydı Ekle
@@ -424,75 +747,88 @@ const SleepTrackerScreen: React.FC<SleepTrackerScreenProps> = ({ navigation }) =
         onRequestClose={() => setModalVisible(false)}
       >
         <View style={styles.modalContainer}>
-          <View style={[styles.modalContent, { backgroundColor: themeAsAny.colors.surface }]}>
-            <Text style={[styles.modalTitle, { color: themeAsAny.colors.onSurface }]}>Yeni Uyku Kaydı Ekle</Text>
+          <View style={[styles.modalContent, { 
+            backgroundColor: isDarkMode ? '#1E1E2E' : theme.colors.surface,
+            borderRadius: 24,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 10 },
+            shadowOpacity: 0.2,
+            shadowRadius: 20,
+            elevation: 12
+          }]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: theme.colors.onSurface }]}>Yeni Uyku Kaydı Ekle</Text>
+              <TouchableOpacity onPress={() => setModalVisible(false)}>
+                <FontAwesomeIcon icon={faClose} size={24} color={theme.colors.onSurface} />
+              </TouchableOpacity>
+            </View>
 
             <View style={styles.formGroup}>
-              <Text style={[styles.label, { color: themeAsAny.colors.onSurface }]}>Uyku Kalitesi</Text>
+              <Text style={[styles.label, { color: theme.colors.onSurface }]}>Uyku Kalitesi</Text>
               <View style={styles.qualityOptions}>
                 <TouchableOpacity
                   style={[
                     styles.qualityOption,
-                    { backgroundColor: themeAsAny.colors.surfaceVariant },
-                    newSleepEntry.quality === 'poor' && styles.selectedQuality,
-                    newSleepEntry.quality === 'poor' && { borderColor: getQualityColor('poor') },
+                    { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.07)' : theme.colors.surfaceVariant },
+                    newSleepEntry.quality === 'poor' && [styles.selectedQuality, { borderColor: getQualityColor('poor') }],
                   ]}
                   onPress={() => setNewSleepEntry({ ...newSleepEntry, quality: 'poor' })}
                 >
                   <Text style={styles.qualityEmoji}>{getQualityEmoji('poor')}</Text>
-                  <Text style={[styles.qualityLabel, { color: themeAsAny.colors.onSurfaceVariant }]}>Kötü</Text>
+                  <Text style={[styles.qualityOptionLabel, { color: theme.colors.onSurfaceVariant }]}>Kötü</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   style={[
                     styles.qualityOption,
-                    { backgroundColor: themeAsAny.colors.surfaceVariant },
-                    newSleepEntry.quality === 'fair' && styles.selectedQuality,
-                    newSleepEntry.quality === 'fair' && { borderColor: getQualityColor('fair') },
+                    { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.07)' : theme.colors.surfaceVariant },
+                    newSleepEntry.quality === 'fair' && [styles.selectedQuality, { borderColor: getQualityColor('fair') }],
                   ]}
                   onPress={() => setNewSleepEntry({ ...newSleepEntry, quality: 'fair' })}
                 >
                   <Text style={styles.qualityEmoji}>{getQualityEmoji('fair')}</Text>
-                  <Text style={[styles.qualityLabel, { color: themeAsAny.colors.onSurfaceVariant }]}>Orta</Text>
+                  <Text style={[styles.qualityOptionLabel, { color: theme.colors.onSurfaceVariant }]}>Orta</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   style={[
                     styles.qualityOption,
-                    { backgroundColor: themeAsAny.colors.surfaceVariant },
-                    newSleepEntry.quality === 'good' && styles.selectedQuality,
-                    newSleepEntry.quality === 'good' && { borderColor: getQualityColor('good') },
+                    { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.07)' : theme.colors.surfaceVariant },
+                    newSleepEntry.quality === 'good' && [styles.selectedQuality, { borderColor: getQualityColor('good') }],
                   ]}
                   onPress={() => setNewSleepEntry({ ...newSleepEntry, quality: 'good' })}
                 >
                   <Text style={styles.qualityEmoji}>{getQualityEmoji('good')}</Text>
-                  <Text style={[styles.qualityLabel, { color: themeAsAny.colors.onSurfaceVariant }]}>İyi</Text>
+                  <Text style={[styles.qualityOptionLabel, { color: theme.colors.onSurfaceVariant }]}>İyi</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   style={[
                     styles.qualityOption,
-                    { backgroundColor: themeAsAny.colors.surfaceVariant },
-                    newSleepEntry.quality === 'excellent' && styles.selectedQuality,
-                    newSleepEntry.quality === 'excellent' && {
-                      borderColor: getQualityColor('excellent'),
-                    },
+                    { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.07)' : theme.colors.surfaceVariant },
+                    newSleepEntry.quality === 'excellent' && [styles.selectedQuality, { borderColor: getQualityColor('excellent') }],
                   ]}
                   onPress={() => setNewSleepEntry({ ...newSleepEntry, quality: 'excellent' })}
                 >
                   <Text style={styles.qualityEmoji}>{getQualityEmoji('excellent')}</Text>
-                  <Text style={[styles.qualityLabel, { color: themeAsAny.colors.onSurfaceVariant }]}>Mükemmel</Text>
+                  <Text style={[styles.qualityOptionLabel, { color: theme.colors.onSurfaceVariant }]}>Mükemmel</Text>
                 </TouchableOpacity>
               </View>
             </View>
 
             <View style={styles.formGroup}>
-              <Text style={[styles.label, { color: themeAsAny.colors.onSurface }]}>Yatış Saati</Text>
+              <Text style={[styles.label, { color: theme.colors.onSurface }]}>Yatış Saati</Text>
               <TouchableOpacity
-                style={[styles.timeInput, { borderColor: themeAsAny.colors.outline }]}
+                style={[styles.timeInput, { 
+                  borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.15)' : theme.colors.outline,
+                  backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)'
+                }]}
                 onPress={() => setShowStartTimePicker(true)}
               >
-                <Text style={{ color: themeAsAny.colors.onSurface }}>{newSleepEntry.startTime}</Text>
+                <View style={styles.timeInputContent}>
+                  <FontAwesomeIcon icon={faMoon} size={18} color={theme.colors.primary} style={{ marginRight: 10 }} />
+                  <Text style={{ color: theme.colors.onSurface, fontSize: 16 }}>{newSleepEntry.startTime}</Text>
+                </View>
               </TouchableOpacity>
               {renderDateTimePicker(
                 showStartTimePicker,
@@ -502,12 +838,18 @@ const SleepTrackerScreen: React.FC<SleepTrackerScreenProps> = ({ navigation }) =
             </View>
 
             <View style={styles.formGroup}>
-              <Text style={[styles.label, { color: themeAsAny.colors.onSurface }]}>Kalkış Saati</Text>
+              <Text style={[styles.label, { color: theme.colors.onSurface }]}>Kalkış Saati</Text>
               <TouchableOpacity 
-                style={[styles.timeInput, { borderColor: themeAsAny.colors.outline }]} 
+                style={[styles.timeInput, { 
+                  borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.15)' : theme.colors.outline,
+                  backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)'
+                }]}
                 onPress={() => setShowEndTimePicker(true)}
               >
-                <Text style={{ color: themeAsAny.colors.onSurface }}>{newSleepEntry.endTime}</Text>
+                <View style={styles.timeInputContent}>
+                  <FontAwesomeIcon icon={faSun} size={18} color="#FF9800" style={{ marginRight: 10 }} />
+                  <Text style={{ color: theme.colors.onSurface, fontSize: 16 }}>{newSleepEntry.endTime}</Text>
+                </View>
               </TouchableOpacity>
               {renderDateTimePicker(
                 showEndTimePicker,
@@ -517,54 +859,122 @@ const SleepTrackerScreen: React.FC<SleepTrackerScreenProps> = ({ navigation }) =
             </View>
 
             <View style={styles.modalButtons}>
-              <Button 
+              <TouchableOpacity 
                 onPress={() => setModalVisible(false)} 
-                style={styles.cancelButton}
-                textColor={themeAsAny.colors.primary}
+                style={[styles.cancelButton, { 
+                  borderColor: theme.colors.primary,
+                  borderWidth: 1,
+                }]}
               >
-                İptal
-              </Button>
-              <Button
-                mode="contained"
+                <Text style={{ color: theme.colors.primary, fontWeight: 'bold', textAlign: 'center' }}>İptal</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
                 onPress={handleAddSleepEntry}
-                style={styles.saveButton}
-                buttonColor={themeAsAny.colors.primary}
+                style={[styles.saveButton, { 
+                  backgroundColor: theme.colors.primary,
+                  shadowColor: theme.colors.primary,
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 8,
+                  elevation: 5,
+                  opacity: (!newSleepEntry.startTime || !newSleepEntry.endTime) ? 0.5 : 1
+                }]}
                 disabled={!newSleepEntry.startTime || !newSleepEntry.endTime}
               >
-                Kaydet
-              </Button>
+                <Text style={{ color: 'white', fontWeight: 'bold', textAlign: 'center' }}>Kaydet</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
-  header: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    elevation: 4,
+  headerContainer: {
+    padding: 20,
+    paddingTop: 30,
+    paddingBottom: 25,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.2,
+    shadowRadius: 15,
+    elevation: 10,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    opacity: 0.9,
   },
   headerTitle: {
-    color: 'white',
-    fontSize: 20,
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginTop: 4,
+  },
+  headerInfo: {
+    fontSize: 14,
+    marginTop: 8,
+    opacity: 0.8,
+  },
+  avatarContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  goalChip: {
+    marginTop: 16,
+    alignSelf: 'flex-start',
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  goalChipText: {
     fontWeight: 'bold',
   },
-  content: {
+  scrollContent: {
     flex: 1,
-    padding: 16,
   },
-  sleepSummaryCard: {
+  card: {
+    borderRadius: 24,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  cardContent: {
+    padding: 20,
+  },
+  loadingContainer: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  sectionTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 16,
-    elevation: 2,
-    borderRadius: 8,
+  },
+  cardTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginLeft: 12,
   },
   sleepSummary: {
     flexDirection: 'row',
@@ -574,6 +984,10 @@ const styles = StyleSheet.create({
   },
   sleepTime: {
     alignItems: 'center',
+  },
+  timeIconContainer: {
+    padding: 8,
+    borderRadius: 20,
   },
   timeLabel: {
     marginTop: 8,
@@ -586,60 +1000,119 @@ const styles = StyleSheet.create({
   sleepDuration: {
     alignItems: 'center',
   },
+  durationIconContainer: {
+    padding: 8,
+    borderRadius: 20,
+  },
   durationValue: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#007AFF',
     marginBottom: 4,
   },
-  qualityIndicator: {
-    padding: 8,
-    borderRadius: 4,
-    marginTop: 8,
-  },
-  qualityText: {
-    color: 'white',
-    textAlign: 'center',
-    fontWeight: 'bold',
-  },
-  card: {
-    marginBottom: 16,
-    elevation: 2,
-    borderRadius: 8,
-  },
-  statsRow: {
+  qualityContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    padding: 8,
+    borderRadius: 16,
     marginTop: 8,
-  },
-  statItem: {
     alignItems: 'center',
+  },
+  qualityIconContainer: {
+    padding: 8,
+    borderRadius: 20,
+    marginRight: 8,
+  },
+  qualityEmoji: {
+    fontSize: 24,
+    marginBottom: 4,
+  },
+  qualityTextContainer: {
     flex: 1,
   },
-  statValue: {
-    fontSize: 18,
+  qualityLabel: {
+    color: '#666',
+    fontSize: 12,
+  },
+  qualityValue: {
     fontWeight: 'bold',
-    color: '#007AFF',
+    fontSize: 16,
+  },
+  sleepGoalContainer: {
+    marginTop: 16,
+  },
+  sleepGoalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  sleepGoalText: {
+    fontSize: 14,
+  },
+  sleepGoalPercentage: {
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  sleepGoalProgressBar: {
+    marginTop: 8,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  statCard: {
+    width: '31%',
+    padding: 10,
+    borderRadius: 16,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  statIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
   },
   statLabel: {
     fontSize: 12,
     color: '#666',
-    marginTop: 4,
+    textAlign: 'center',
+    marginBottom: 8,
   },
-  recommendationText: {
-    marginTop: 8,
-    fontStyle: 'italic',
-    color: '#555',
-  },
-  historyTitle: {
-    marginVertical: 16,
+  statValue: {
     fontSize: 18,
     fontWeight: 'bold',
   },
-  historyCard: {
-    marginBottom: 12,
-    elevation: 1,
-    borderRadius: 8,
+  adviceContainer: {
+    flexDirection: 'row',
+    marginBottom: 8,
+    alignItems: 'center',
+  },
+  adviceIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  adviceContent: {
+    flex: 1,
+  },
+  adviceText: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  historyHeaderContainer: {
+    paddingHorizontal: 16,
+    marginTop: 8,
+  },
+  historyDateContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   historyHeader: {
     flexDirection: 'row',
@@ -653,7 +1126,7 @@ const styles = StyleSheet.create({
   historyQuality: {
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 4,
+    borderRadius: 8,
   },
   historyQualityText: {
     color: 'white',
@@ -667,6 +1140,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginTop: 8,
   },
   historyTime: {
     flexDirection: 'row',
@@ -677,46 +1151,43 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   historyDuration: {
-    backgroundColor: '#f0f0f0',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 4,
+    borderRadius: 8,
   },
   historyDurationText: {
     fontWeight: 'bold',
     fontSize: 14,
   },
+  emptyHistoryContainer: {
+    alignItems: 'center',
+    padding: 20,
+  },
   addButton: {
     marginVertical: 20,
-    backgroundColor: '#007AFF',
   },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    padding: 20,
   },
   modalContent: {
-    backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 20,
     width: '90%',
-    elevation: 5,
+    padding: 24,
+    borderRadius: 24,
   },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  modalText: {
-    marginBottom: 15,
-    textAlign: 'center',
-  },
-  modalButtons: {
+  modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 20,
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
   },
   formGroup: {
     marginBottom: 16,
@@ -724,14 +1195,16 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     marginBottom: 8,
-    color: '#333',
   },
   timeInput: {
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
+    borderRadius: 12,
+    padding: 16,
     fontSize: 16,
+  },
+  timeInputContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   qualityOptions: {
     flexDirection: 'row',
@@ -741,39 +1214,43 @@ const styles = StyleSheet.create({
   qualityOption: {
     flex: 1,
     padding: 12,
-    borderRadius: 8,
-    backgroundColor: '#f8f8f8',
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     margin: 4,
     borderWidth: 2,
     borderColor: 'transparent',
   },
-  selectedQuality: {
-    borderWidth: 2,
-    backgroundColor: '#f0f0f0',
-  },
-  qualityEmoji: {
-    fontSize: 24,
-    marginBottom: 4,
-  },
-  qualityLabel: {
-    color: '#666',
+  qualityOptionLabel: {
     fontSize: 12,
     textAlign: 'center',
+  },
+  selectedQuality: {
+    borderWidth: 2,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginTop: 24,
   },
   cancelButton: {
     flex: 1,
     marginRight: 8,
+    borderRadius: 12,
   },
   saveButton: {
     flex: 1,
     marginLeft: 8,
-    backgroundColor: '#007AFF',
+    borderRadius: 12,
   },
   noDataText: {
     textAlign: 'center',
-    color: '#666',
+    fontStyle: 'italic',
+    marginVertical: 20,
+  },
+  emptyStateText: {
+    textAlign: 'center',
     fontStyle: 'italic',
     marginVertical: 20,
   },

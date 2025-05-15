@@ -16,6 +16,7 @@ import {
   ViewStyle,
   TextStyle,
   FlexAlignType,
+  SafeAreaView,
 } from 'react-native';
 import {
   Card,
@@ -62,7 +63,6 @@ import {
   faMinus,
   faXmark,
   faTrash,
-  faSearch,
   faMagnifyingGlass,
   faCheckCircle,
   faClipboardCheck,
@@ -75,7 +75,7 @@ import {
   faBreadSlice,
   faDrumstickBite,
   faCookie,
-  faAppleAlt,
+  faAppleWhole,
   faCheese,
   faBurger,
   faBowlFood,
@@ -86,7 +86,7 @@ import {
   faIceCream,
 
   // Beslenme ve sağlık ikonları
-  faWeight,
+  faWeightScale,
   faFire,
   faLeaf,
   faCubes,
@@ -203,6 +203,31 @@ interface StylesType {
   foodItemRight: ViewStyle;
   amountInput: ViewStyle;
   sectionTitle: TextStyle;
+  header: ViewStyle;
+  headerContent: ViewStyle;
+  headerLeft: ViewStyle;
+  headerSubtitle: TextStyle;
+  headerInfo: TextStyle;
+  calorieCircleContainer: ViewStyle;
+  calorieCircle: ViewStyle;
+  calorieValue: TextStyle;
+  calorieUnit: TextStyle;
+  caloriePercentage: ViewStyle;
+  caloriePercentageText: TextStyle;
+  progressContainer: ViewStyle;
+  progressBarContainer: ViewStyle;
+  progressBarFill: ViewStyle;
+  card: ViewStyle;
+  cardContent: ViewStyle;
+  sectionTitleContainer: ViewStyle;
+  cardTitle: TextStyle;
+  nutritionItemIcon: ViewStyle;
+  nutritionItemContent: ViewStyle;
+  nutritionProgress: ViewStyle;
+  nutritionProgressFill: ViewStyle;
+  mealCardHeader: ViewStyle;
+  mealHeaderContent: ViewStyle;
+  emptyMealContainer: ViewStyle;
 }
 
 // Örnek yemek verileri
@@ -250,7 +275,32 @@ type InputChangeProps = {
 };
 
 const FoodTrackerScreen: React.FC<FoodTrackerScreenProps> = ({ navigation }) => {
-  const { theme } = useTheme();
+  const { theme, isDarkMode } = useTheme();
+  const themeAsAny = theme as any;
+  
+  // Create a consistent card styling function
+  const getCardStyle = () => ({
+    backgroundColor: isDarkMode ? '#1E1E2E' : theme.colors.surface,
+    borderWidth: 0,
+    borderRadius: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
+    margin: 16,
+    marginTop: 8
+  });
+  
+  // Create a consistent nutritionItem styling function
+  const getNutritionItemStyle = (color: string) => ({
+    backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.07)' : `${color}10`,
+    borderWidth: 1,
+    borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : `${color}20`,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12
+  });
   
   const [modalVisible, setModalVisible] = React.useState<boolean>(false);
   const [foodSearchQuery, setFoodSearchQuery] = React.useState<string>('');
@@ -288,6 +338,11 @@ const FoodTrackerScreen: React.FC<FoodTrackerScreenProps> = ({ navigation }) => 
     removeFood,
     getEntriesByMealType,
   } = useFoodTracker();
+
+  // Renk teması
+  const primaryColor = themeAsAny.colors.primary || '#4285F4';
+  const secondaryColor = isDarkMode ? '#1E1E2E' : '#fff';
+  const headerColor = isDarkMode ? '#1E1E2E' : 'rgba(255, 87, 51, 0.95)'; // Turuncu gıda teması
 
   // Load custom foods on app start
   React.useEffect(() => {
@@ -393,7 +448,7 @@ const FoodTrackerScreen: React.FC<FoodTrackerScreenProps> = ({ navigation }) => 
 
   // Kategoriler
   const categories: Array<CategoryConfig> = [
-    { type: 'meyve', label: 'Meyveler', icon: faAppleAlt },
+    { type: 'meyve', label: 'Meyveler', icon: faAppleWhole },
     { type: 'sebze', label: 'Sebzeler', icon: faCarrot },
     { type: 'et', label: 'Et Ürünleri', icon: faDrumstickBite },
     { type: 'tavuk', label: 'Tavuk', icon: faDrumstickBite },
@@ -466,49 +521,135 @@ const FoodTrackerScreen: React.FC<FoodTrackerScreenProps> = ({ navigation }) => 
     const totalCalories = entries.reduce((sum, entry) => sum + entry.nutrition.calories, 0);
 
     return (
-      <Card style={styles.mealCard}>
-        <Card.Content>
-          <View style={styles.mealHeader}>
-            <View style={styles.mealTitleWrapper}>
-              <FontAwesomeIcon icon={icon} size={24} color={theme.colors.primary} />
-              <PaperText variant="titleLarge" style={styles.mealTitle}>
-                {title}
-              </PaperText>
+      <Card style={[styles.mealCard, getCardStyle()]}>
+        <Card.Content style={{ padding: 0 }}>
+          <View style={styles.mealCardHeader}>
+            <View style={{
+              backgroundColor: `${primaryColor}20`,
+              width: 50, 
+              height: 50, 
+              borderRadius: 25,
+              justifyContent: 'center',
+              alignItems: 'center',
+              shadowColor: primaryColor,
+              shadowOffset: { width: 0, height: 3 },
+              shadowOpacity: 0.2,
+              shadowRadius: 4,
+              elevation: 3,
+              marginRight: 12
+            }}>
+              <FontAwesomeIcon icon={icon} size={24} color={primaryColor} />
             </View>
-            <PaperText
-              variant="titleMedium"
-              style={styles.mealCalories}
-            >{`${totalCalories} kcal`}</PaperText>
+            <View style={styles.mealHeaderContent}>
+              <Text style={[styles.mealTitle, { color: theme.colors.onSurface }]}>
+                {title}
+              </Text>
+              <Text style={[styles.mealCalories, { color: theme.colors.onSurfaceVariant }]}>
+                {totalCalories} kalori • {entries.length} öğe
+              </Text>
+            </View>
           </View>
 
-          {entries.map(entry => (
-            <View style={styles.foodEntry} key={entry.id}>
-              <View style={styles.foodInfo}>
-                <PaperText variant="bodyLarge" style={styles.foodName}>
-                  {entry.name}
-                </PaperText>
-                <PaperText
-                  variant="bodyMedium"
-                  style={styles.foodAmount}
-                >{`${entry.amount}g`}</PaperText>
-              </View>
-              <View style={styles.foodCalories}>
-                <PaperText
-                  variant="bodyMedium"
-                  style={styles.calorieText}
-                >{`${entry.nutrition.calories} kcal`}</PaperText>
-                <IconButton icon="delete" size={20} onPress={() => handleRemoveFood(entry.id)} />
-              </View>
-            </View>
-          ))}
+          <Divider style={{ marginVertical: 12 }} />
 
-          <Button
-            mode="outlined"
+          {entries.length === 0 ? (
+            <View style={styles.emptyMealContainer}>
+              <FontAwesomeIcon 
+                icon={icon} 
+                size={30} 
+                color={isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)'} 
+                style={{ marginBottom: 12 }} 
+              />
+              <Text style={[styles.emptyMeal, { color: theme.colors.onSurfaceVariant }]}>
+                Henüz bu öğüne yemek eklenmemiş
+              </Text>
+            </View>
+          ) : (
+            <View style={{ padding: 16 }}>
+              {entries.map(entry => (
+                <View 
+                  key={entry.id} 
+                  style={[styles.foodEntry, { 
+                    backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                    borderRadius: 16,
+                    marginBottom: 10,
+                    padding: 12
+                  }]}
+                >
+                  <View style={styles.foodInfo}>
+                    <Text style={[styles.foodName, { 
+                      color: theme.colors.onSurface,
+                      fontSize: 16,
+                      fontWeight: '600'
+                    }]}>
+                      {entry.name}
+                    </Text>
+                    <Text style={[styles.foodAmount, { 
+                      color: theme.colors.onSurfaceVariant,
+                      fontSize: 14
+                    }]}>
+                      {entry.amount}g
+                    </Text>
+                  </View>
+                  <View style={styles.foodCalories}>
+                    <Text style={[styles.calorieText, { 
+                      color: theme.colors.onSurfaceVariant,
+                      fontSize: 14,
+                      fontWeight: '600',
+                      marginRight: 8
+                    }]}>
+                      {entry.nutrition.calories} kcal
+                    </Text>
+                    <TouchableOpacity
+                      style={[styles.deleteButton, {
+                        width: 36,
+                        height: 36,
+                        borderRadius: 18,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        backgroundColor: isDarkMode ? 'rgba(244, 67, 54, 0.1)' : 'rgba(244, 67, 54, 0.05)'
+                      }]}
+                      onPress={() => handleRemoveFood(entry.id)}
+                    >
+                      <FontAwesomeIcon 
+                        icon={faTrash} 
+                        size={16} 
+                        color={theme.colors.error} 
+                      />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
+
+          <TouchableOpacity
             onPress={() => handleOpenModal(mealType)}
-            style={styles.addFoodButton}
+            style={[styles.addFoodButton, {
+              backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+              marginHorizontal: 16,
+              marginBottom: 16,
+              borderRadius: 12,
+              padding: 12,
+              flexDirection: 'row',
+              justifyContent: 'center',
+              alignItems: 'center'
+            }]}
           >
-            Add Food
-          </Button>
+            <FontAwesomeIcon 
+              icon={faPlus} 
+              size={16} 
+              color={primaryColor} 
+              style={{ marginRight: 8 }} 
+            />
+            <Text style={{
+              color: primaryColor,
+              fontWeight: '600',
+              fontSize: 16
+            }}>
+              Yemek Ekle
+            </Text>
+          </TouchableOpacity>
         </Card.Content>
       </Card>
     );
@@ -671,11 +812,20 @@ const FoodTrackerScreen: React.FC<FoodTrackerScreenProps> = ({ navigation }) => 
       onRequestClose={() => setCustomFoodsListModalVisible(false)}
     >
       <View style={styles.modalContainer}>
-        <View style={[styles.modalContent, { backgroundColor: theme.colors.surface }]}>
+        <View style={[styles.modalContent, { 
+          backgroundColor: theme.colors.surface,
+          borderRadius: 24,
+          padding: 16,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.1,
+          shadowRadius: 12,
+          elevation: 8
+        }]}>
           <View style={styles.mealHeader}>
             <Title style={{ color: theme.colors.surface }}>Özel Yemeklerim</Title>
             <IconButton
-              icon="close"
+              icon="close-circle"
               size={24}
               onPress={() => setCustomFoodsListModalVisible(false)}
             />
@@ -714,7 +864,7 @@ const FoodTrackerScreen: React.FC<FoodTrackerScreenProps> = ({ navigation }) => 
                   </View>
                   <View style={{ flexDirection: 'row' }}>
                     <IconButton
-                      icon="delete"
+                      icon="delete-circle"
                       size={20}
                       color={theme.colors.error}
                       onPress={() => {
@@ -733,7 +883,7 @@ const FoodTrackerScreen: React.FC<FoodTrackerScreenProps> = ({ navigation }) => 
                       }}
                     />
                     <IconButton
-                      icon="plus"
+                      icon="plus-circle"
                       size={20}
                       color={theme.colors.primary}
                       onPress={() => {
@@ -761,100 +911,122 @@ const FoodTrackerScreen: React.FC<FoodTrackerScreenProps> = ({ navigation }) => 
       onRequestClose={() => setModalVisible(false)}
     >
       <View style={[styles.modalContainer, { backgroundColor: theme.colors.background }]}>
-        <View style={styles.modalHeader}>
-          <PaperText variant="headlineMedium" style={styles.modalTitle} children="Yemek Ekle" />
-          <IconButton icon="close" size={24} onPress={() => setModalVisible(false)} />
-        </View>
+        <View style={[styles.modalContent, {
+          backgroundColor: theme.colors.surface,
+          borderRadius: 24,
+          padding: 16,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.1,
+          shadowRadius: 12,
+          elevation: 8
+        }]}>
+          <View style={styles.modalHeader}>
+            <PaperText variant="headlineMedium" style={styles.modalTitle} children="Yemek Ekle" />
+            <IconButton 
+              icon="close-circle"
+              size={24} 
+              onPress={() => setModalVisible(false)} 
+            />
+          </View>
 
-        <Searchbar
-          placeholder="Yemek ara..."
-          onChangeText={performSearch}
-          value={foodSearchQuery}
-          style={styles.searchBar}
-        />
+          <Searchbar
+            placeholder="Yemek ara..."
+            onChangeText={performSearch}
+            value={foodSearchQuery}
+            style={styles.searchBar}
+            icon="magnify"
+          />
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll}>
-          <Chip
-            selected={selectedCategory === null}
-            onPress={() => setSelectedCategory(null)}
-            style={styles.categoryChip}
-          >
-            Tümü
-          </Chip>
-          {categories.map(category => (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll}>
             <Chip
-              key={category.type}
-              selected={selectedCategory === category.type}
-              onPress={() => setSelectedCategory(category.type)}
+              selected={selectedCategory === null}
+              onPress={() => setSelectedCategory(null)}
               style={styles.categoryChip}
             >
-              {category.label}
+              Tümü
             </Chip>
-          ))}
-        </ScrollView>
+            {categories.map(category => (
+              <Chip
+                key={category.type}
+                selected={selectedCategory === category.type}
+                onPress={() => setSelectedCategory(category.type)}
+                style={styles.categoryChip}
+              >
+                {category.label}
+              </Chip>
+            ))}
+          </ScrollView>
 
-        <FlatList
-          data={foodSearchResults}
-          keyExtractor={item => item.id}
-          renderItem={({ item }) => (
-            <List.Item
-              title={item.name}
-              description={`${item.nutrition.calories} kcal / ${item.amount}${item.unit || 'g'}`}
-              left={(props: ListItemProps) => (
-                <View
-                  style={{
-                    width: props.size,
-                    height: props.size,
-                    borderRadius: props.size / 2,
-                    backgroundColor: theme.colors.primaryContainer,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                  }}
-                >
-                  <FontAwesomeIcon
-                    icon={categories.find(c => c.type === item.category)?.icon || faUtensils}
-                    size={24}
-                    color="#fff"
-                  />
-                </View>
-              )}
-              right={(props: ListItemProps) => (
-                <View style={styles.foodItemRight}>
-                  <TextInput
-                    mode="outlined"
-                    keyboardType="numeric"
-                    value={customAmountFoodId === item.id ? customAmount : '100'}
-                    onChangeText={(text: string) => {
-                      setCustomAmount(text);
-                      setCustomAmountFoodId(item.id);
+          <FlatList
+            data={foodSearchResults}
+            keyExtractor={item => item.id}
+            renderItem={({ item }) => (
+              <List.Item
+                title={item.name}
+                description={`${item.nutrition.calories} kcal / ${item.amount}${item.unit || 'g'}`}
+                left={(props: ListItemProps) => (
+                  <View
+                    style={{
+                      width: props.size,
+                      height: props.size,
+                      borderRadius: props.size / 2,
+                      backgroundColor: theme.colors.primaryContainer,
+                      justifyContent: 'center',
+                      alignItems: 'center',
                     }}
-                    style={styles.amountInput}
-                  />
-                  <PaperText
-                    variant="bodySmall"
-                    style={styles.unitText}
-                    children={item.unit || 'g'}
-                  />
-                  <Button
-                    mode="contained"
-                    onPress={() => handleAddFood(item)}
-                    style={styles.addButton}
                   >
-                    Ekle
-                  </Button>
-                </View>
-              )}
-              onPress={() => handleViewFoodDetails(item)}
-            />
-          )}
-        />
+                    <FontAwesomeIcon
+                      icon={categories.find(c => c.type === item.category)?.icon || faUtensils}
+                      size={24}
+                      color="#fff"
+                    />
+                  </View>
+                )}
+                right={(props: ListItemProps) => (
+                  <View style={styles.foodItemRight}>
+                    <TextInput
+                      mode="outlined"
+                      keyboardType="numeric"
+                      value={customAmountFoodId === item.id ? customAmount : '100'}
+                      onChangeText={(text: string) => {
+                        setCustomAmount(text);
+                        setCustomAmountFoodId(item.id);
+                      }}
+                      style={styles.amountInput}
+                    />
+                    <PaperText
+                      variant="bodySmall"
+                      style={styles.unitText}
+                      children={item.unit || 'g'}
+                    />
+                    <Button
+                      mode="contained"
+                      onPress={() => handleAddFood(item)}
+                      style={styles.addButton}
+                    >
+                      Ekle
+                    </Button>
+                  </View>
+                )}
+                onPress={() => handleViewFoodDetails(item)}
+              />
+            )}
+          />
 
-        <FAB
-          icon="plus"
-          label="Özel Yemek Ekle"
-          onPress={handleOpenCustomFoodModal}
-          style={[styles.fab, { backgroundColor: theme.colors.primary }]}
-        />
+          <FAB
+            icon="plus"
+            onPress={handleOpenCustomFoodModal}
+            style={[styles.fab, { 
+              backgroundColor: theme.colors.primary,
+              position: 'absolute',
+              right: 16,
+              bottom: 16,
+              borderRadius: 28,
+              elevation: 5
+            }]}
+          />
+        </View>
       </View>
     </Modal>
   );
@@ -871,17 +1043,29 @@ const FoodTrackerScreen: React.FC<FoodTrackerScreenProps> = ({ navigation }) => 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.modalContainer}
       >
-        <View style={[styles.modalContent, { backgroundColor: theme.colors.surface }]}>
+        <View style={[styles.modalContent, { 
+          backgroundColor: theme.colors.surface,
+          borderRadius: 24,
+          padding: 16
+        }]}>
           <View style={styles.mealHeader}>
             <Title style={{ color: theme.colors.surface }}>Özel Yemek Ekle</Title>
-            <IconButton icon="close" size={24} onPress={() => setCustomFoodModalVisible(false)} />
+            <IconButton 
+              icon="close-circle"
+              size={24} 
+              onPress={() => setCustomFoodModalVisible(false)} 
+            />
           </View>
 
           <Divider style={styles.divider} />
 
           <ScrollView style={{ flex: 1 }}>
             {/* Temel Bilgiler Bölümü */}
-            <Surface style={styles.formSection}>
+            <Surface style={[styles.formSection, {
+              borderRadius: 16,
+              elevation: 2,
+              backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : theme.colors.background
+            }]}>
               <Text style={styles.sectionTitle}>Temel Bilgiler</Text>
               <TextInput
                 placeholder="Yemek Adı (zorunlu)"
@@ -933,7 +1117,11 @@ const FoodTrackerScreen: React.FC<FoodTrackerScreenProps> = ({ navigation }) => 
             </Surface>
 
             {/* Kategori Bölümü */}
-            <Surface style={styles.formSection}>
+            <Surface style={[styles.formSection, {
+              borderRadius: 16,
+              elevation: 2,
+              backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : theme.colors.background
+            }]}>
               <Text style={styles.sectionTitle}>Kategori</Text>
               <ScrollView
                 horizontal
@@ -954,7 +1142,11 @@ const FoodTrackerScreen: React.FC<FoodTrackerScreenProps> = ({ navigation }) => 
             </Surface>
 
             {/* Besin Değerleri Bölümü */}
-            <Surface style={styles.formSection}>
+            <Surface style={[styles.formSection, {
+              borderRadius: 16,
+              elevation: 2,
+              backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : theme.colors.background
+            }]}>
               <Text style={styles.sectionTitle}>Besin Değerleri (100g/100ml için)</Text>
               <View style={styles.formGrid}>
                 <TextInput
@@ -1037,6 +1229,15 @@ const FoodTrackerScreen: React.FC<FoodTrackerScreenProps> = ({ navigation }) => 
     // Diğer state sıfırlamaları
   }, []);
 
+  // Bugünün tarihini format olarak döndür
+  const getFormattedDate = () => {
+    return new Date().toLocaleDateString('tr-TR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  };
+
   // Stiller component içerisinde tanımlanıyor
   const styles = StyleSheet.create({
     container: {
@@ -1053,6 +1254,8 @@ const FoodTrackerScreen: React.FC<FoodTrackerScreenProps> = ({ navigation }) => 
     headerTitle: {
       fontSize: 20,
       fontWeight: 'bold',
+      color: 'white',
+      marginBottom: 2,
     },
     headerIcons: {
       flexDirection: 'row',
@@ -1171,10 +1374,6 @@ const FoodTrackerScreen: React.FC<FoodTrackerScreenProps> = ({ navigation }) => 
     },
     nutritionItem: {
       width: '48%',
-      backgroundColor: '#F5F5F5',
-      borderRadius: 8,
-      padding: 12,
-      marginBottom: 16,
     },
     nutritionLabel: {
       fontSize: 14,
@@ -1247,6 +1446,8 @@ const FoodTrackerScreen: React.FC<FoodTrackerScreenProps> = ({ navigation }) => 
       margin: 16,
       right: 0,
       bottom: 0,
+      borderRadius: 28,
+      elevation: 5,
     },
     modalContainer: {
       flex: 1,
@@ -1391,131 +1592,289 @@ const FoodTrackerScreen: React.FC<FoodTrackerScreenProps> = ({ navigation }) => 
     addFoodButton: {
       marginTop: 12,
     },
+    header: {
+      padding: 12,
+      paddingTop: 16,
+      paddingBottom: 14,
+      backgroundColor: '#fff',
+    },
+    headerContent: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 8,
+    },
+    headerLeft: {
+      flex: 1,
+    },
+    headerSubtitle: {
+      fontSize: 12,
+      color: 'rgba(255, 255, 255, 0.9)',
+      marginBottom: 2,
+    },
+    headerInfo: {
+      fontSize: 12,
+      color: 'rgba(255, 255, 255, 0.9)',
+    },
+    calorieCircleContainer: {
+      width: 70,
+      height: 70,
+      borderRadius: 35,
+      backgroundColor: secondaryColor,
+      justifyContent: 'center',
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 4,
+    },
+    calorieCircle: {
+      width: 64,
+      height: 64,
+      borderRadius: 32,
+      backgroundColor: secondaryColor,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    calorieValue: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: isDarkMode ? '#fff' : '#FF5733',
+    },
+    calorieUnit: {
+      fontSize: 12,
+      color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : '#FF5733',
+    },
+    caloriePercentage: {
+      width: '100%',
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 87, 51, 0.1)',
+      marginTop: 4,
+    },
+    caloriePercentageText: {
+      fontSize: 10,
+      fontWeight: 'bold',
+      color: isDarkMode ? '#fff' : '#FF5733',
+      textAlign: 'right',
+      marginTop: 2,
+    },
+    progressContainer: {
+      marginTop: 2,
+      paddingHorizontal: 12,
+    },
+    progressBarContainer: {
+      width: '100%',
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+      overflow: 'hidden',
+    },
+    progressBarFill: {
+      height: '100%',
+      borderRadius: 4,
+      backgroundColor: '#ffffff',
+    },
+    card: {
+      margin: 16,
+      marginTop: 8,
+    },
+    cardContent: {
+      padding: 16,
+    },
+    sectionTitleContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 16,
+    },
+    cardTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+    },
+    nutritionItemIcon: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    nutritionItemContent: {
+      flex: 1,
+    },
+    nutritionProgress: {
+      height: 10,
+      borderRadius: 5,
+      backgroundColor: '#f0f0f0',
+      marginVertical: 4,
+    },
+    nutritionProgressFill: {
+      height: '100%',
+      borderRadius: 5,
+    },
+    mealCardHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    mealHeaderContent: {
+      flex: 1,
+    },
+    emptyMealContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
   });
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={styles.headerBar}>
-        <Text style={styles.headerTitle}>Beslenme Takibi</Text>
-        <View style={styles.headerIcons}>
-          <TouchableOpacity style={styles.iconButton} onPress={handleOpenCustomFoodsList}>
-            <FontAwesomeIcon icon={faUtensils} size={26} color={theme.colors.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.iconButton}
-            onPress={() => navigation.navigate('NutritionGoals')}
-          >
-            <FontAwesomeIcon icon={faCog} size={26} color={theme.colors.primary} />
-          </TouchableOpacity>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      {/* Header */}
+      <View style={[styles.header, { backgroundColor: headerColor }]}>
+        <View style={styles.headerContent}>
+          <View style={styles.headerLeft}>
+            <Text style={styles.headerSubtitle}>
+              {getFormattedDate()}
+            </Text>
+            <Text style={styles.headerTitle}>Beslenme Takibi</Text>
+            <Text style={styles.headerInfo}>
+              Hedef: {goals.calories} kalori
+            </Text>
+          </View>
+          
+          <View style={styles.calorieCircleContainer}>
+            <View style={styles.calorieCircle}>
+              <Text style={styles.calorieValue}>
+                {dailyNutrition.calories}
+              </Text>
+              <Text style={styles.calorieUnit}>
+                kalori
+              </Text>
+            </View>
+          </View>
+        </View>
+        
+        <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 12, marginBottom: 4}}>
+          <Text style={styles.caloriePercentageText}>
+            {goalPercentages.calories}% tamamlandı
+          </Text>
+        </View>
+        
+        {/* Progress Bar */}
+        <View style={styles.progressContainer}>
+          <View style={styles.progressBarContainer}>
+            <View
+              style={[
+                styles.progressBarFill,
+                {
+                  width: `${Math.min(goalPercentages.calories, 100)}%`,
+                },
+              ]}
+            />
+          </View>
         </View>
       </View>
 
-      <ScrollView style={styles.scrollContent}>
-        <Card style={styles.calorieCard}>
-          <Card.Content style={styles.calorieContent}>
-            <View style={styles.calorieRow}>
-              <View>
-                <Text style={styles.calorieNumber}>{dailyNutrition.calories}</Text>
-                <Text style={styles.calorieText}>kalori tüketildi</Text>
+      <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* Besin Değerleri Kartı */}
+        <Card style={[styles.card, getCardStyle()]}>
+          <Card.Content style={styles.cardContent}>
+            <View style={styles.sectionTitleContainer}>
+              <View style={{
+                backgroundColor: `${primaryColor}20`,
+                width: 50, 
+                height: 50, 
+                borderRadius: 25,
+                justifyContent: 'center',
+                alignItems: 'center',
+                shadowColor: primaryColor,
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.2,
+                shadowRadius: 4,
+                elevation: 3
+              }}>
+                <FontAwesomeIcon icon={faScaleBalanced} size={24} color={primaryColor} />
               </View>
-              <View>
-                <Text style={styles.goalNumber}>{goals.calories}</Text>
-                <Text style={styles.goalText}>günlük hedef</Text>
-              </View>
+              <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>Besin Değerleri</Text>
             </View>
-            <ProgressBar
-              progress={goalPercentages.calories / 100}
-              color={theme.colors.primary}
-              style={styles.progressBar}
-            />
-          </Card.Content>
-        </Card>
-
-        <Card style={styles.summaryCard}>
-          <Card.Content>
-            <View style={styles.summaryHeader}>
-              <Text style={styles.summaryTitle}>Günlük Özet</Text>
-              <Text style={styles.dateText}>
-                {new Date().toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' })}
-              </Text>
-            </View>
-
-            <Divider style={styles.dividerLine} />
-
-            {mealTypes.map((meal, index) => {
-              const entries = getEntriesByMealType(meal.type);
-              const totalCalories = entries.reduce(
-                (sum, entry) => sum + entry.nutrition.calories,
-                0,
-              );
-              const itemCount = entries.length;
-
-              return (
-                <View key={meal.type}>
-                  <TouchableOpacity
-                    style={styles.mealRow}
-                    onPress={() => handleOpenModal(meal.type)}
-                  >
-                    <View style={styles.mealIconContainer}>
-                      <FontAwesomeIcon icon={meal.icon} size={20} color={theme.colors.primary} />
-                    </View>
-
-                    <View style={styles.mealInfo}>
-                      <Text style={styles.mealName}>{meal.label}</Text>
-                      <Text style={styles.mealStats}>
-                        {itemCount} öğe • {totalCalories} kcal
-                      </Text>
-                    </View>
-
-                    <TouchableOpacity
-                      style={styles.addButton}
-                      onPress={() => handleOpenModal(meal.type)}
-                    >
-                      <FontAwesomeIcon icon={faPlus} size={18} color={theme.colors.primary} />
-                    </TouchableOpacity>
-                  </TouchableOpacity>
-
-                  {index < mealTypes.length - 1 && <Divider style={styles.mealDivider} />}
-                </View>
-              );
-            })}
-          </Card.Content>
-        </Card>
-
-        <Card style={styles.nutritionCard}>
-          <Card.Content>
-            <View style={styles.nutritionHeader}>
-              <Text style={styles.nutritionTitle}>Besin Değerleri</Text>
-              <TouchableOpacity onPress={() => navigation.navigate('NutritionGoals')}>
-                <FontAwesomeIcon icon={faCog} size={20} color={theme.colors.primary} />
-              </TouchableOpacity>
-            </View>
-
-            <Divider style={styles.dividerLine} />
 
             <View style={styles.nutritionGrid}>
-              {renderNutritionValue(
-                'Protein',
-                dailyNutrition.protein,
-                'g',
-                goals.protein,
-                theme.colors.primary,
-              )}
-              {renderNutritionValue(
-                'Karbonhidrat',
-                dailyNutrition.carbs,
-                'g',
-                goals.carbs,
-                '#FF9800',
-              )}
-              {renderNutritionValue('Yağ', dailyNutrition.fat, 'g', goals.fat, '#FFD600')}
-              {renderNutritionValue(
-                'Lif',
-                dailyNutrition.fiber || 0,
-                'g',
-                25, // Varsayılan değer
-                '#4CAF50',
-              )}
+              <View style={[styles.nutritionItem, getNutritionItemStyle('#4285F4')]}>
+                <View style={styles.nutritionItemIcon}>
+                  <FontAwesomeIcon icon={faDumbbell} size={18} color="#4285F4" />
+                </View>
+                <View style={styles.nutritionItemContent}>
+                  <Text style={styles.nutritionLabel}>Protein</Text>
+                  <Text style={[styles.nutritionValue, { color: '#4285F4' }]}>{dailyNutrition.protein}g</Text>
+                  <View style={styles.nutritionProgress}>
+                    <View 
+                      style={[styles.nutritionProgressFill, { 
+                        width: `${Math.min((dailyNutrition.protein / goals.protein) * 100, 100)}%`,
+                        backgroundColor: '#4285F4' 
+                      }]} 
+                    />
+                  </View>
+                  <Text style={styles.nutritionGoal}>Hedef: {goals.protein}g</Text>
+                </View>
+              </View>
+
+              <View style={[styles.nutritionItem, getNutritionItemStyle('#FF9800')]}>
+                <View style={styles.nutritionItemIcon}>
+                  <FontAwesomeIcon icon={faBreadSlice} size={18} color="#FF9800" />
+                </View>
+                <View style={styles.nutritionItemContent}>
+                  <Text style={styles.nutritionLabel}>Karbonhidrat</Text>
+                  <Text style={[styles.nutritionValue, { color: '#FF9800' }]}>{dailyNutrition.carbs}g</Text>
+                  <View style={styles.nutritionProgress}>
+                    <View 
+                      style={[styles.nutritionProgressFill, { 
+                        width: `${Math.min((dailyNutrition.carbs / goals.carbs) * 100, 100)}%`,
+                        backgroundColor: '#FF9800' 
+                      }]} 
+                    />
+                  </View>
+                  <Text style={styles.nutritionGoal}>Hedef: {goals.carbs}g</Text>
+                </View>
+              </View>
+
+              <View style={[styles.nutritionItem, getNutritionItemStyle('#FFD600')]}>
+                <View style={styles.nutritionItemIcon}>
+                  <FontAwesomeIcon icon={faOilCan} size={18} color="#FFD600" />
+                </View>
+                <View style={styles.nutritionItemContent}>
+                  <Text style={styles.nutritionLabel}>Yağ</Text>
+                  <Text style={[styles.nutritionValue, { color: '#FFD600' }]}>{dailyNutrition.fat}g</Text>
+                  <View style={styles.nutritionProgress}>
+                    <View 
+                      style={[styles.nutritionProgressFill, { 
+                        width: `${Math.min((dailyNutrition.fat / goals.fat) * 100, 100)}%`,
+                        backgroundColor: '#FFD600' 
+                      }]} 
+                    />
+                  </View>
+                  <Text style={styles.nutritionGoal}>Hedef: {goals.fat}g</Text>
+                </View>
+              </View>
+
+              <View style={[styles.nutritionItem, getNutritionItemStyle('#4CAF50')]}>
+                <View style={styles.nutritionItemIcon}>
+                  <FontAwesomeIcon icon={faLeaf} size={18} color="#4CAF50" />
+                </View>
+                <View style={styles.nutritionItemContent}>
+                  <Text style={styles.nutritionLabel}>Lif</Text>
+                  <Text style={[styles.nutritionValue, { color: '#4CAF50' }]}>{dailyNutrition.fiber || 0}g</Text>
+                  <View style={styles.nutritionProgress}>
+                    <View 
+                      style={[styles.nutritionProgressFill, { 
+                        width: `${Math.min(((dailyNutrition.fiber || 0) / 25) * 100, 100)}%`,
+                        backgroundColor: '#4CAF50' 
+                      }]} 
+                    />
+                  </View>
+                  <Text style={styles.nutritionGoal}>Hedef: 25g</Text>
+                </View>
+              </View>
             </View>
           </Card.Content>
         </Card>
@@ -1523,7 +1882,7 @@ const FoodTrackerScreen: React.FC<FoodTrackerScreenProps> = ({ navigation }) => 
         <Text style={styles.sectionTitle}>Günlük Öğünler</Text>
 
         {mealTypes.map(meal => (
-          <Card key={meal.type} style={styles.mealCard}>
+          <Card key={meal.type} style={[styles.mealCard, getCardStyle()]}>
             <View
               style={{
                 padding: 16,
@@ -1582,12 +1941,21 @@ const FoodTrackerScreen: React.FC<FoodTrackerScreenProps> = ({ navigation }) => 
       {/* Özel yemekler listesi modalı */}
       {renderCustomFoodsListModal()}
 
-      <FAB
-        icon="plus"
-        style={[styles.floatingActionButton, { backgroundColor: theme.colors.primary }]}
+      <TouchableOpacity
+        style={[styles.floatingActionButton, { 
+          backgroundColor: theme.colors.primary,
+          width: 56,
+          height: 56,
+          borderRadius: 28,
+          justifyContent: 'center',
+          alignItems: 'center',
+          elevation: 6
+        }]}
         onPress={() => handleOpenModal('snack')}
-      />
-    </View>
+      >
+        <FontAwesomeIcon icon={faPlus} size={24} color="#FFFFFF" />
+      </TouchableOpacity>
+    </SafeAreaView>
   );
 };
 

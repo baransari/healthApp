@@ -1,5 +1,18 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Text, TouchableOpacity, Modal, Alert, useColorScheme } from 'react-native';
+import { 
+  View, 
+  StyleSheet, 
+  ScrollView, 
+  Text, 
+  TouchableOpacity, 
+  Modal, 
+  Alert, 
+  useColorScheme,
+  SafeAreaView,
+  Image,
+  Pressable,
+  ViewStyle
+} from 'react-native';
 // Import from paperComponents utility
 import {
   Card,
@@ -7,6 +20,8 @@ import {
   Divider,
   Chip,
   IconButton as PaperIconButton,
+  Surface,
+  ProgressBar
 } from '../utils/paperComponents';
 // FontAwesome ikonları
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
@@ -47,7 +62,7 @@ import {
 } from '../store/exerciseTrackerSlice';
 import AddExerciseModal from '../components/AddExerciseModal';
 import EditWorkoutPlanModal from '../components/EditWorkoutPlanModal';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme } from '../hooks/useTheme';
 
 // Define navigation type
 type ExerciseScreenNavigationProp = CompositeNavigationProp<
@@ -475,21 +490,150 @@ const ExerciseScreen: React.FC<ExerciseScreenProps> = ({ navigation }) => {
     setNewPlanModalVisible(true);
   };
 
+  // Get the formatted date
+  const getFormattedDate = () => {
+    return new Date().toLocaleDateString('tr-TR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  };
+
   // Render workout plans with proper theme integration
   const renderWorkoutPlans = () => (
     <>
-      <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>Önerilen Programlar</Text>
-      {workoutPlansData && workoutPlansData.map(plan => (
-        <Card key={plan.id} style={[styles.planCard, { backgroundColor: theme.colors.surface }]}>
-          <Card.Content>
-            <Text style={[styles.planTitle, { color: theme.colors.onSurface }]}>{plan.name}</Text>
-            <Text style={[styles.planDescription, { color: theme.colors.onSurfaceVariant }]}>
-              {plan.description}
-            </Text>
+      <View style={styles.summaryCard}>
+        <Surface style={[styles.card, { 
+          backgroundColor: isDarkMode ? '#1E1E2E' : theme.colors.surface,
+          borderRadius: 24,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.1,
+          shadowRadius: 12,
+          elevation: 8
+        }]}>
+          <View style={styles.cardContent}>
+            <View style={styles.sectionTitleContainer}>
+              <View style={{
+                backgroundColor: `${theme.colors.primary}20`,
+                width: 50, 
+                height: 50, 
+                borderRadius: 25,
+                justifyContent: 'center',
+                alignItems: 'center',
+                shadowColor: theme.colors.primary,
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.2,
+                shadowRadius: 4,
+                elevation: 3
+              }}>
+                <FontAwesomeIcon icon={faChartLine} size={24} color={theme.colors.primary} />
+              </View>
+              <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>Fitness İlerlemesi</Text>
+            </View>
 
-            <View style={[styles.planDetailRow, { backgroundColor: theme.colors.surfaceVariant }]}>
+            {/* Progress stats */}
+            <View style={styles.statsGrid}>
+              <View style={[styles.statCard, { 
+                backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.07)' : 'rgba(30, 136, 229, 0.1)',
+                borderWidth: 1,
+                borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(30, 136, 229, 0.2)',
+              }]}>
+                <View style={styles.statIconContainer}>
+                  <FontAwesomeIcon icon={faCalendarCheck} size={20} color="#1E88E5" />
+                </View>
+                <Text style={styles.statLabel}>Tamamlanan Antrenmanlar</Text>
+                <Text style={[styles.statValue, { color: "#1E88E5" }]}>8</Text>
+              </View>
+              
+              <View style={[styles.statCard, { 
+                backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.07)' : 'rgba(255, 87, 34, 0.1)',
+                borderWidth: 1,
+                borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 87, 34, 0.2)',
+              }]}>
+                <View style={styles.statIconContainer}>
+                  <FontAwesomeIcon icon={faFire} size={20} color="#FF5722" />
+                </View>
+                <Text style={styles.statLabel}>Toplam Yakılan Kalori</Text>
+                <Text style={[styles.statValue, { color: "#FF5722" }]}>2,450</Text>
+              </View>
+              
+              <View style={[styles.statCard, { 
+                backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.07)' : 'rgba(76, 175, 80, 0.1)',
+                borderWidth: 1,
+                borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(76, 175, 80, 0.2)',
+              }]}>
+                <View style={styles.statIconContainer}>
+                  <FontAwesomeIcon icon={faClock} size={20} color="#4CAF50" />
+                </View>
+                <Text style={styles.statLabel}>Toplam Süre</Text>
+                <Text style={[styles.statValue, { color: "#4CAF50" }]}>5.5s</Text>
+              </View>
+              
+              <View style={[styles.statCard, { 
+                backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.07)' : 'rgba(156, 39, 176, 0.1)',
+                borderWidth: 1,
+                borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(156, 39, 176, 0.2)',
+              }]}>
+                <View style={styles.statIconContainer}>
+                  <FontAwesomeIcon icon={faHeartbeat} size={20} color="#9C27B0" />
+                </View>
+                <Text style={styles.statLabel}>Ortalama Nabız</Text>
+                <Text style={[styles.statValue, { color: "#9C27B0" }]}>128</Text>
+              </View>
+            </View>
+          </View>
+        </Surface>
+      </View>
+
+      <Text style={[styles.sectionTitle, { color: theme.colors.onSurface, marginLeft: 16, marginTop: 20, marginBottom: 10 }]}>Önerilen Programlar</Text>
+      
+      {workoutPlansData && workoutPlansData.map(plan => (
+        <Card key={plan.id} style={[styles.planCard, { 
+          backgroundColor: isDarkMode ? '#1E1E2E' : theme.colors.surface,
+          borderRadius: 24,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.1,
+          shadowRadius: 12,
+          elevation: 8,
+          marginHorizontal: 16,
+          marginBottom: 16
+        }]}>
+          <Card.Content style={styles.cardContent}>
+            <View style={styles.planHeader}>
+              <View style={{
+                backgroundColor: `${theme.colors.primary}20`,
+                width: 50, 
+                height: 50, 
+                borderRadius: 25,
+                justifyContent: 'center',
+                alignItems: 'center',
+                shadowColor: theme.colors.primary,
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.2,
+                shadowRadius: 4,
+                elevation: 3,
+                marginRight: 12
+              }}>
+                <FontAwesomeIcon icon={faDumbbell} size={24} color={theme.colors.primary} />
+              </View>
+              <View style={styles.planTitleContainer}>
+                <Text style={[styles.planTitle, { color: theme.colors.onSurface }]}>{plan.name}</Text>
+                <Text style={[styles.planDescription, { color: theme.colors.onSurfaceVariant }]}>
+                  {plan.description}
+                </Text>
+              </View>
+            </View>
+
+            <View style={[styles.planDetailRow, { 
+              backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : theme.colors.surfaceVariant,
+              borderRadius: 12,
+              marginTop: 16,
+              padding: 12
+            }]}>
               <View style={styles.planDetailItem}>
-                <FontAwesomeIcon icon={faClock} size={18} color={theme.colors.onSurfaceVariant} />
+                <FontAwesomeIcon icon={faClock} size={18} color={theme.colors.primary} />
                 <Text style={[styles.planDetailText, { color: theme.colors.onSurfaceVariant }]}>
                   {plan.duration || '45'} dakika
                 </Text>
@@ -498,7 +642,7 @@ const ExerciseScreen: React.FC<ExerciseScreenProps> = ({ navigation }) => {
                 <FontAwesomeIcon 
                   icon={faCalendarDays} 
                   size={18} 
-                  color={theme.colors.onSurfaceVariant} 
+                  color={theme.colors.primary} 
                 />
                 <Text style={[styles.planDetailText, { color: theme.colors.onSurfaceVariant }]}>
                   {plan.frequency || 'Haftada 3 gün'}
@@ -506,17 +650,23 @@ const ExerciseScreen: React.FC<ExerciseScreenProps> = ({ navigation }) => {
               </View>
             </View>
 
-            <Divider style={[styles.divider, { backgroundColor: theme.colors.outline }]} />
+            <Divider style={[styles.divider, { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)', marginVertical: 16 }]} />
 
             <Text style={[styles.exercisesTitle, { color: theme.colors.onSurface }]}>
-              Egzersizler:
+              Egzersizler
             </Text>
             {(plan.exercises || []).map((exercise: any) => (
               <TouchableOpacity
                 key={exercise.id || exercise.exerciseId}
                 style={[
                   styles.exerciseItem, 
-                  { borderBottomColor: theme.colors.outline }
+                  { 
+                    backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                    borderRadius: 16,
+                    marginBottom: 10,
+                    padding: 12,
+                    borderBottomWidth: 0
+                  }
                 ]}
                 onPress={() => showExerciseDetails(exercise)}
               >
@@ -524,22 +674,31 @@ const ExerciseScreen: React.FC<ExerciseScreenProps> = ({ navigation }) => {
                   <View style={[
                     styles.exerciseIconContainer, 
                     { 
-                      backgroundColor: actualDarkMode ? theme.colors.surfaceVariant : '#e6f2ff',
-                      borderColor: theme.colors.primary
+                      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : `${theme.colors.primary}15`,
+                      borderColor: theme.colors.primary,
+                      width: 40,
+                      height: 40,
+                      borderRadius: 20
                     }
                   ]}>
                     <FontAwesomeIcon
                       icon={getCategoryIcon(exercise.category || 'kardiyo')}
                       size={20}
                       color={theme.colors.primary}
-                      style={styles.exerciseIcon}
                     />
                   </View>
                   <View style={styles.exerciseContent}>
-                    <Text style={[styles.exerciseName, { color: theme.colors.onSurface }]}>
+                    <Text style={[styles.exerciseName, { 
+                      color: theme.colors.onSurface,
+                      fontSize: 16,
+                      fontWeight: '600'
+                    }]}>
                       {exercise.name}
                     </Text>
-                    <Text style={[styles.exerciseDetail, { color: theme.colors.onSurfaceVariant }]}>
+                    <Text style={[styles.exerciseDetail, { 
+                      color: theme.colors.onSurfaceVariant,
+                      fontSize: 14
+                    }]}>
                       {exercise.duration || exercise.recommendedDuration || '20'} dk •
                       {exercise.caloriesBurned ||
                         (exercise.caloriesBurnedPerMinute && exercise.duration
@@ -562,7 +721,14 @@ const ExerciseScreen: React.FC<ExerciseScreenProps> = ({ navigation }) => {
           </Card.Content>
           <Card.Actions style={styles.cardActions}>
             <TouchableOpacity 
-              style={[styles.startButton, { backgroundColor: theme.colors.primary }]} 
+              style={[styles.startButton, { 
+                backgroundColor: theme.colors.primary,
+                shadowColor: theme.colors.primary,
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.25,
+                shadowRadius: 8,
+                elevation: 5
+              }]} 
               onPress={() => startWorkout(plan)}
             >
               <FontAwesomeIcon 
@@ -578,7 +744,10 @@ const ExerciseScreen: React.FC<ExerciseScreenProps> = ({ navigation }) => {
             <TouchableOpacity
               style={[
                 styles.editButtonContainer, 
-                { borderColor: theme.colors.primary }
+                { 
+                  borderColor: theme.colors.primary,
+                  backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)'
+                }
               ]}
               onPress={() => openEditPlanModal(plan)}
             >
@@ -597,7 +766,15 @@ const ExerciseScreen: React.FC<ExerciseScreenProps> = ({ navigation }) => {
       ))}
 
       <TouchableOpacity 
-        style={[styles.addButton, { backgroundColor: theme.colors.primary }]} 
+        style={[styles.addButton, { 
+          backgroundColor: theme.colors.primary,
+          shadowColor: theme.colors.primary,
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.25,
+          shadowRadius: 8,
+          elevation: 5,
+          marginHorizontal: 16
+        }]} 
         onPress={createNewPlan}
       >
         <FontAwesomeIcon 
@@ -615,109 +792,273 @@ const ExerciseScreen: React.FC<ExerciseScreenProps> = ({ navigation }) => {
 
   const renderWorkoutHistory = () => (
     <View style={styles.workoutHistoryContainer}>
-      <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
+      <View style={styles.summaryCard}>
+        <Surface style={[styles.card, { 
+          backgroundColor: isDarkMode ? '#1E1E2E' : theme.colors.surface,
+          borderRadius: 24,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.1,
+          shadowRadius: 12,
+          elevation: 8,
+          marginHorizontal: 16
+        }]}>
+          <View style={styles.cardContent}>
+            <View style={styles.sectionTitleContainer}>
+              <View style={{
+                backgroundColor: `${theme.colors.primary}20`,
+                width: 50, 
+                height: 50, 
+                borderRadius: 25,
+                justifyContent: 'center',
+                alignItems: 'center',
+                shadowColor: theme.colors.primary,
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.2,
+                shadowRadius: 4,
+                elevation: 3
+              }}>
+                <FontAwesomeIcon icon={faCalendarCheck} size={24} color={theme.colors.primary} />
+              </View>
+              <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>Bu Ayki Aktivite</Text>
+            </View>
+
+            {/* Activity calendar visualization */}
+            <View style={styles.activityCalendar}>
+              {/* This would be a calendar visualization in a real app */}
+              <View style={styles.calendarGrid}>
+                {Array(7).fill(0).map((_, dayIndex) => (
+                  <View key={`day-${dayIndex}`} style={styles.calendarDay}>
+                    <Text style={styles.dayLabel}>
+                      {['P', 'S', 'Ç', 'P', 'C', 'C', 'P'][dayIndex]}
+                    </Text>
+                    {Array(4).fill(0).map((_, weekIndex) => (
+                      <View 
+                        key={`cell-${dayIndex}-${weekIndex}`} 
+                        style={[
+                          styles.calendarCell,
+                          {
+                            backgroundColor: Math.random() > 0.6 
+                              ? (isDarkMode ? 'rgba(66, 133, 244, 0.8)' : 'rgba(66, 133, 244, 0.7)')
+                              : (isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)')
+                          }
+                        ]}
+                      />
+                    ))}
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.activityLegend}>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendColor, { 
+                  backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
+                }]} />
+                <Text style={{ color: theme.colors.onSurfaceVariant }}>Antrenman Yok</Text>
+              </View>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendColor, { 
+                  backgroundColor: isDarkMode ? 'rgba(66, 133, 244, 0.8)' : 'rgba(66, 133, 244, 0.7)'
+                }]} />
+                <Text style={{ color: theme.colors.onSurfaceVariant }}>Antrenman Yapıldı</Text>
+              </View>
+            </View>
+          </View>
+        </Surface>
+      </View>
+
+      <Text style={[styles.sectionTitle, { color: theme.colors.onSurface, marginLeft: 16, marginTop: 20, marginBottom: 10 }]}>
         Geçmiş Antrenmanlar
       </Text>
+
       {workoutHistoryData.map((session: WorkoutSession, index: number) => (
-        <View 
+        <Card 
           key={index} 
           style={[
-            styles.sessionContainer, 
+            styles.sessionCard, 
             { 
-              backgroundColor: theme.colors.surface,
-              shadowColor: theme.colors.shadow,
+              backgroundColor: isDarkMode ? '#1E1E2E' : theme.colors.surface,
+              borderRadius: 24,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.1,
+              shadowRadius: 12,
+              elevation: 8,
+              marginHorizontal: 16,
+              marginBottom: 16
             }
           ]}
         >
-          <View style={styles.sessionHeader}>
-            <View style={styles.completedIndicator} />
-            <Text style={[styles.sessionDate, { color: theme.colors.onSurface }]}>
-              {formatDate(session.date)}
-              {session.name ? ` - ${session.name}` : ''}
-            </Text>
-          </View>
-          <View style={styles.exerciseList}>
-            {session.exercises.map((exercise: Exercise, exIndex: number) => (
-              <View 
-                key={exIndex} 
-                style={[
-                  styles.historyExerciseItem, 
-                  { backgroundColor: theme.colors.surfaceVariant }
-                ]}
-              >
-                <Text style={[styles.exerciseName, { color: theme.colors.onSurface }]}>
-                  {exercise.name}
+          <Card.Content style={styles.sessionContent}>
+            <View style={styles.sessionHeader}>
+              <View style={{
+                backgroundColor: `${theme.colors.primary}20`,
+                width: 50, 
+                height: 50, 
+                borderRadius: 25,
+                justifyContent: 'center',
+                alignItems: 'center',
+                shadowColor: theme.colors.primary,
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.2,
+                shadowRadius: 4,
+                elevation: 3,
+                marginRight: 12
+              }}>
+                <FontAwesomeIcon icon={faCalendarAlt} size={22} color={theme.colors.primary} />
+              </View>
+              <View style={styles.sessionInfo}>
+                <Text style={[styles.sessionDate, { 
+                  color: theme.colors.onSurface,
+                  fontSize: 18,
+                  fontWeight: 'bold'
+                }]}>
+                  {formatDate(session.date)}
                 </Text>
-                <View style={styles.setsContainer}>
-                  {exercise.sets?.map((set, setIndex) => (
-                    <Chip 
-                      key={setIndex} 
-                      style={[styles.setChip, { backgroundColor: theme.colors.primary }]} 
-                      textStyle={[styles.setChipText, { color: theme.colors.onPrimary }]}
-                    >
-                      {set.weight}kg x {set.reps}
-                    </Chip>
-                  ))}
+                <Text style={{ color: theme.colors.onSurfaceVariant }}>
+                  {session.name ? session.name : `${session.exercises.length} egzersiz • ${session.totalDuration} dk`}
+                </Text>
+              </View>
+              <View style={styles.sessionStats}>
+                <View style={styles.statBadge}>
+                  <FontAwesomeIcon icon={faFire} size={14} color="#FF5722" style={{ marginRight: 4 }} />
+                  <Text style={{ color: '#FF5722', fontWeight: '600' }}>{session.totalCalories}</Text>
                 </View>
               </View>
-            ))}
-          </View>
-        </View>
+            </View>
+
+            <Divider style={{ marginVertical: 12 }} />
+
+            <View style={styles.exerciseList}>
+              {session.exercises.map((exercise: Exercise, exIndex: number) => (
+                <View 
+                  key={exIndex} 
+                  style={[
+                    styles.historyExerciseItem, 
+                    { 
+                      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                      borderRadius: 12,
+                      padding: 12,
+                      marginBottom: 8
+                    }
+                  ]}
+                >
+                  <View style={styles.exerciseRow}>
+                    <View style={[
+                      styles.exerciseIconContainer, 
+                      { 
+                        backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : `${theme.colors.primary}15`,
+                        borderColor: theme.colors.primary,
+                        width: 36,
+                        height: 36,
+                        borderRadius: 18
+                      }
+                    ]}>
+                      <FontAwesomeIcon
+                        icon={getCategoryIcon(exercise.category || 'kardiyo')}
+                        size={18}
+                        color={theme.colors.primary}
+                      />
+                    </View>
+                    <View style={styles.exerciseContent}>
+                      <Text style={[styles.exerciseName, { 
+                        color: theme.colors.onSurface,
+                        fontSize: 16,
+                        fontWeight: '600'
+                      }]}>
+                        {exercise.name}
+                      </Text>
+                      <Text style={[styles.exerciseDetail, { 
+                        color: theme.colors.onSurfaceVariant,
+                        fontSize: 14
+                      }]}>
+                        {exercise.duration} dakika • {exercise.caloriesBurned} kalori
+                      </Text>
+                    </View>
+                  </View>
+                  {exercise.sets && exercise.sets.length > 0 && (
+                    <View style={styles.setsContainer}>
+                      {exercise.sets.map((set, setIndex) => (
+                        <Chip 
+                          key={setIndex} 
+                          style={[styles.setChip, { 
+                            backgroundColor: theme.colors.primary,
+                            height: 28,
+                            marginRight: 6,
+                            marginBottom: 3
+                          }]} 
+                          textStyle={[styles.setChipText, { color: theme.colors.onPrimary }]}
+                        >
+                          {set.weight}kg x {set.reps}
+                        </Chip>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              ))}
+            </View>
+          </Card.Content>
+        </Card>
       ))}
     </View>
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={[styles.header, { backgroundColor: theme.colors.primary }]}>
-        <Text style={[styles.headerTitle, { color: theme.colors.onPrimary }]}>
-          Egzersiz Programları
-        </Text>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
+      {/* Header Section - Modern and vibrant design */}
+      <View style={[styles.headerContainer, { backgroundColor: theme.colors.primary }]}>
+        <View style={styles.headerContent}>
+          <View>
+            <Text style={[styles.headerSubtitle, { color: 'rgba(255, 255, 255, 0.9)' }]}>
+              Fitness Programı
+            </Text>
+            <Text style={[styles.headerTitle, { color: '#fff' }]}>
+              Egzersiz Takibi
+            </Text>
+            <Text style={[styles.headerInfo, { color: 'rgba(255, 255, 255, 0.9)' }]}>
+              {getFormattedDate()}
+            </Text>
+          </View>
+          <TouchableOpacity style={styles.headerAction}>
+            <View style={[styles.avatarContainer, { backgroundColor: 'rgba(255, 255, 255, 0.2)' }]}>
+              <FontAwesomeIcon icon={faDumbbell} size={22} color="#fff" />
+            </View>
+          </TouchableOpacity>
+        </View>
+
+        {/* Tabs Section */}
+        <View style={styles.tabsContainer}>
+          <TouchableOpacity
+            style={[
+              styles.tab,
+              activeTab === 'plans' && [styles.activeTab, { backgroundColor: 'rgba(255, 255, 255, 0.2)' }]
+            ]}
+            onPress={() => setActiveTab('plans')}
+          >
+            <Text style={[styles.tabText, { color: '#fff' }]}>Programlar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.tab,
+              activeTab === 'history' && [styles.activeTab, { backgroundColor: 'rgba(255, 255, 255, 0.2)' }]
+            ]}
+            onPress={() => setActiveTab('history')}
+          >
+            <Text style={[styles.tabText, { color: '#fff' }]}>Geçmiş</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
-      <View style={[
-        styles.tabContainer, 
-        { 
-          backgroundColor: theme.colors.surface,
-          borderBottomColor: theme.colors.outline 
-        }
-      ]}>
-        <TouchableOpacity
-          style={[
-            styles.tab, 
-            activeTab === 'plans' && [styles.activeTab, { borderBottomColor: theme.colors.primary }]
-          ]}
-          onPress={() => setActiveTab('plans')}
-        >
-          <Text style={[
-            styles.tabText, 
-            { color: theme.colors.onSurfaceVariant },
-            activeTab === 'plans' && { color: theme.colors.primary, fontWeight: 'bold' }
-          ]}>
-            Programlar
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.tab, 
-            activeTab === 'history' && [styles.activeTab, { borderBottomColor: theme.colors.primary }]
-          ]}
-          onPress={() => setActiveTab('history')}
-        >
-          <Text style={[
-            styles.tabText, 
-            { color: theme.colors.onSurfaceVariant },
-            activeTab === 'history' && { color: theme.colors.primary, fontWeight: 'bold' }
-          ]}>
-            Geçmiş
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      <ScrollView style={[styles.content, { backgroundColor: theme.colors.background }]}>
+      <ScrollView 
+        style={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 20 }}
+      >
         {activeTab === 'plans' ? renderWorkoutPlans() : renderWorkoutHistory()}
       </ScrollView>
 
+      {/* Exercise Detail Modal */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -860,89 +1201,194 @@ const ExerciseScreen: React.FC<ExerciseScreenProps> = ({ navigation }) => {
       >
         <FontAwesomeIcon icon={faPlus} size={24} color={theme.colors.onPrimary} />
       </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
-  header: {
-    backgroundColor: '#4285F4',
+  headerContainer: {
     padding: 20,
+    paddingTop: 30,
+    paddingBottom: 25,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.2,
+    shadowRadius: 15,
+    elevation: 10,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    opacity: 0.9,
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: 'white',
+    marginTop: 4,
   },
-  tabContainer: {
+  headerInfo: {
+    fontSize: 14,
+    marginTop: 8,
+    opacity: 0.8,
+  },
+  avatarContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  headerAction: {
+    // For any additional styling for header actions
+  },
+  tabsContainer: {
     flexDirection: 'row',
-    backgroundColor: 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    marginTop: 16,
+    backgroundColor: 'transparent',
   },
   tab: {
     flex: 1,
     paddingVertical: 12,
     alignItems: 'center',
+    borderRadius: 20,
+    marginHorizontal: 4,
   },
   activeTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: '#4285F4',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
   },
   tabText: {
     fontSize: 16,
-    color: '#666',
+    fontWeight: '600',
   },
-  activeTabText: {
-    color: '#4285F4',
-    fontWeight: 'bold',
-  },
-  content: {
+  scrollContent: {
     flex: 1,
+  },
+  summaryCard: {
+    marginTop: 16,
+  },
+  card: {
+    borderRadius: 24,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  cardContent: {
     padding: 16,
   },
-  sectionTitle: {
+  sectionTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  cardTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginLeft: 12,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  statCard: {
+    width: '48%',
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  statIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 12,
+  },
+  statLabel: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  statValue: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginVertical: 12,
   },
   planCard: {
     marginBottom: 16,
-    borderRadius: 12,
+    borderRadius: 24,
     overflow: 'hidden',
+  },
+  planHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  planTitleContainer: {
+    flex: 1,
+  },
+  planTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  planDescription: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
   },
   planDetailRow: {
     flexDirection: 'row',
-    marginTop: 12,
     backgroundColor: '#f8f8f8',
-    borderRadius: 8,
-    padding: 8,
+    borderRadius: 12,
+    padding: 12,
   },
   planDetailItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 16,
-    marginVertical: 4,
+    marginRight: 20,
   },
   planDetailText: {
     marginLeft: 8,
     color: '#666',
-    fontSize: 13,
+    fontSize: 14,
   },
   divider: {
-    marginVertical: 12,
+    marginVertical: 16,
   },
   exercisesTitle: {
     fontWeight: 'bold',
-    marginBottom: 8,
+    marginBottom: 12,
+    fontSize: 16,
   },
   exerciseItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
@@ -952,27 +1398,27 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   exerciseIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: '#e6f2ff',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#4285F4',
   },
-  exerciseIcon: {},
   exerciseContent: {
     flex: 1,
     marginLeft: 12,
   },
   exerciseName: {
     fontWeight: 'bold',
+    fontSize: 16,
   },
   exerciseDetail: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#666',
-    marginTop: 2,
+    marginTop: 4,
   },
   difficultyIndicator: {
     height: 28,
@@ -982,131 +1428,132 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     minWidth: 60,
   },
+  difficultyText: {
+    fontSize: 12,
+    color: 'white',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    textTransform: 'capitalize',
+  },
+  cardActions: {
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  startButton: {
+    backgroundColor: '#4285F4',
+    borderRadius: 24,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+    marginRight: 12,
+    shadowColor: '#4285F4',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  startButtonText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginLeft: 8,
+  },
   editButtonContainer: {
     borderColor: '#4285F4',
-    borderWidth: 2,
+    borderWidth: 1,
     borderRadius: 24,
-    paddingVertical: 10,
-    paddingHorizontal: 15,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
   },
   editButtonText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: 'bold',
     color: '#4285F4',
     textAlign: 'center',
-    marginLeft: 5,
-  },
-  startButton: {
-    backgroundColor: '#4285F4',
-    borderRadius: 24,
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    marginRight: 10,
-    elevation: 3,
-  },
-  startButtonText: {
-    fontSize: 13,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    textAlign: 'center',
-    marginLeft: 5,
+    marginLeft: 8,
   },
   addButton: {
     backgroundColor: '#4285F4',
     borderRadius: 24,
-    paddingVertical: 12,
+    paddingVertical: 14,
     paddingHorizontal: 20,
     marginVertical: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 3,
+    shadowColor: '#4285F4',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
   buttonIcon: {
-    marginRight: 5,
-  },
-  buttonText: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-    color: '#FFFFFF',
-  },
-  statsCard: {
-    marginBottom: 16,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  statItem: {
-    alignItems: 'center',
-  },
-  statValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#007AFF',
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 4,
+    marginRight: 8,
   },
   workoutHistoryContainer: {
-    marginTop: 16,
+    flex: 1,
   },
-  sessionContainer: {
+  sessionCard: {
     marginBottom: 16,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    borderRadius: 24,
+    overflow: 'hidden',
+  },
+  sessionContent: {
+    padding: 16,
   },
   sessionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
   },
-  completedIndicator: {
-    width: 8,
-    height: 20,
-    backgroundColor: '#4CAF50',
-    borderRadius: 4,
-    marginRight: 10,
+  sessionInfo: {
+    flex: 1,
   },
   sessionDate: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
   },
-  exerciseList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  historyExerciseItem: {
+  sessionStats: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 8,
+  },
+  statBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 87, 34, 0.1)',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+  },
+  exerciseList: {
+    // For any additional styling
+  },
+  historyExerciseItem: {
     marginBottom: 8,
-    backgroundColor: '#f9f9f9',
-    padding: 8,
-    borderRadius: 8,
-    flexWrap: 'wrap',
+    borderRadius: 12,
+    padding: 12,
   },
   setsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    marginTop: 8,
+  },
+  setChip: {
+    backgroundColor: '#4285F4',
+    marginRight: 4,
+    marginBottom: 4,
+    height: 26,
+  },
+  setChipText: {
+    color: 'white',
+    fontSize: 12,
   },
   modalContainer: {
     flex: 1,
@@ -1117,10 +1564,15 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: 'white',
-    borderRadius: 20,
+    borderRadius: 24,
     padding: 20,
     width: '100%',
     maxHeight: '80%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    elevation: 12,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -1134,8 +1586,8 @@ const styles = StyleSheet.create({
   },
   exerciseDetails: {
     backgroundColor: '#f9f9f9',
-    borderRadius: 12,
-    padding: 12,
+    borderRadius: 16,
+    padding: 16,
   },
   detailRow: {
     flexDirection: 'row',
@@ -1177,7 +1629,7 @@ const styles = StyleSheet.create({
   modalButton: {
     backgroundColor: '#4285F4',
     borderRadius: 24,
-    paddingVertical: 12,
+    paddingVertical: 14,
     paddingHorizontal: 20,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1193,31 +1645,11 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 4,
+    elevation: 6,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 3,
-  },
-  cardActions: {
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-  },
-  actionButton: {
-    paddingHorizontal: 10,
-    borderRadius: 8,
-    elevation: 2,
-  },
-  setChip: {
-    backgroundColor: '#4285F4',
-    marginRight: 4,
-    marginBottom: 4,
-    height: 26,
-  },
-  setChipText: {
-    color: 'white',
-    fontSize: 12,
+    shadowRadius: 6,
   },
   modalDifficultyIndicator: {
     height: 28,
@@ -1228,22 +1660,43 @@ const styles = StyleSheet.create({
     minWidth: 60,
     marginLeft: 8,
   },
-  difficultyText: {
+  activityCalendar: {
+    marginVertical: 16,
+  },
+  calendarGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  calendarDay: {
+    alignItems: 'center',
+  },
+  dayLabel: {
     fontSize: 12,
-    color: 'white',
-    fontWeight: 'bold',
-    textAlign: 'center',
-    textTransform: 'capitalize',
-  },
-  planTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  planDescription: {
-    fontSize: 14,
     color: '#666',
-    marginVertical: 8,
+    marginBottom: 8,
   },
+  calendarCell: {
+    width: 32,
+    height: 32,
+    borderRadius: 6,
+    margin: 2,
+  },
+  activityLegend: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 12,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 12,
+  },
+  legendColor: {
+    width: 16,
+    height: 16,
+    borderRadius: 4,
+    marginRight: 6,
+  }
 });
 
 export default ExerciseScreen;

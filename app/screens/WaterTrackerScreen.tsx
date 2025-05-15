@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Modal,
   Pressable,
+  SafeAreaView,
 } from 'react-native';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -31,6 +32,12 @@ import {
   faXmark,
   faCheck,
   faTrash,
+  faHistory,
+  faWineBottle,
+  faGlassWater,
+  faDroplet,
+  faTint,
+  faCalendarDay,
 } from '@fortawesome/free-solid-svg-icons';
 
 type WaterTrackerScreenNavigationProp = CompositeNavigationProp<
@@ -44,6 +51,7 @@ type WaterTrackerScreenProps = {
 
 const WaterTrackerScreen: React.FC<WaterTrackerScreenProps> = ({ navigation }) => {
   const { theme, isDarkMode, toggleTheme } = useTheme();
+  const themeAsAny = theme as any;
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [selectedAmount, setSelectedAmount] = useState<number>(250);
 
@@ -59,6 +67,11 @@ const WaterTrackerScreen: React.FC<WaterTrackerScreenProps> = ({ navigation }) =
   } = useWaterTracker();
 
   const { user } = useUser();
+
+  // Renk teması
+  const primaryColor = themeAsAny.colors.primary || '#4285F4';
+  const secondaryColor = isDarkMode ? '#1E1E2E' : '#fff';
+  const headerColor = isDarkMode ? '#1E1E2E' : 'rgba(3, 169, 244, 0.95)';
 
   console.log('WaterTracker - Current totalIntake:', totalIntake, 'ml (', totalIntake / 1000, 'L)');
   // Only log user waterIntake if user exists
@@ -101,7 +114,11 @@ const WaterTrackerScreen: React.FC<WaterTrackerScreenProps> = ({ navigation }) =
 
   // Bugünün tarihini format olarak döndür
   const getFormattedDate = () => {
-    return new Date().toISOString().split('T')[0];
+    return new Date().toLocaleDateString('tr-TR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
   };
 
   // Kayıt zamanını biçimlendir
@@ -110,64 +127,118 @@ const WaterTrackerScreen: React.FC<WaterTrackerScreenProps> = ({ navigation }) =
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={[styles.header, { backgroundColor: theme.colors.primary }]}>
-        <Text style={styles.headerTitle}>Su Takibi</Text>
-        <View style={styles.headerRight}>
-          <IconButton
-            icon={() => <FontAwesomeIcon icon={faAdjust} color="white" size={24} />}
-            size={24}
-            onPress={() => toggleTheme()}
-          />
-          <View style={[styles.waterCircle, { backgroundColor: theme.colors.surface }]}>
-            <Text style={[styles.waterValue, { color: theme.colors.primary }]}>
-              {(totalIntake / 1000).toFixed(1)}
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      {/* Header */}
+      <View style={[styles.header, { backgroundColor: headerColor }]}>
+        <View style={styles.headerContent}>
+          <View>
+            <Text style={[styles.headerSubtitle, { color: 'rgba(255, 255, 255, 0.9)' }]}>
+              {getFormattedDate()}
             </Text>
-            <Text style={[styles.waterLabel, { color: theme.colors.primary }]}>litre</Text>
+            <Text style={styles.headerTitle}>Su Takibi</Text>
+            <Text style={[styles.headerInfo, { color: 'rgba(255, 255, 255, 0.9)' }]}>
+              Günlük Hedef: {(waterGoal / 1000).toFixed(1)}L
+            </Text>
+          </View>
+          
+          <View style={styles.waterCircleContainer}>
+            <View style={[styles.waterCircle, { 
+              backgroundColor: secondaryColor,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.2,
+              shadowRadius: 8,
+              elevation: 10,
+            }]}>
+              <Text style={[styles.waterValue, { color: isDarkMode ? '#fff' : '#03A9F4' }]}>
+                {(totalIntake / 1000).toFixed(1)}
+              </Text>
+              <Text style={[styles.waterUnit, { color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : '#03A9F4' }]}>
+                litre
+              </Text>
+              <View style={[styles.waterPercentage, { backgroundColor: isDarkMode ? '#03A9F4' : 'rgba(3, 169, 244, 0.1)' }]}>
+                <Text style={[styles.waterPercentageText, { color: isDarkMode ? '#fff' : '#03A9F4' }]}>
+                  {percentage}%
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
+        
+        {/* Progress Bar */}
+        <View style={styles.progressContainer}>
+          <View style={styles.progressBarContainer}>
+            <View
+              style={[
+                styles.progressBar,
+                {
+                  width: `${Math.min(percentage, 100)}%`,
+                  backgroundColor: '#fff',
+                },
+              ]}
+            />
           </View>
         </View>
       </View>
 
-      <ScrollView style={styles.content}>
-        <Card style={styles.card}>
-          <Card.Content>
-            <View style={styles.progressContainer}>
-              <View style={styles.progressHeader}>
-                <Title style={{ color: theme.colors.onSurface }}>
-                  Günlük Hedef: {waterGoal / 1000}L
-                </Title>
-                <Text style={[styles.progressText, { color: theme.colors.primary }]}>
-                  {totalIntake} / {waterGoal} ml
-                </Text>
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Quick Add Card */}
+        <Card style={[styles.card, { 
+          backgroundColor: isDarkMode ? '#1E1E2E' : theme.colors.surface,
+          borderWidth: 0,
+        }]}>
+          <Card.Content style={styles.cardContent}>
+            <View style={styles.sectionTitleContainer}>
+              <View style={{
+                backgroundColor: `${primaryColor}20`,
+                width: 50, 
+                height: 50, 
+                borderRadius: 25,
+                justifyContent: 'center',
+                alignItems: 'center',
+                shadowColor: primaryColor,
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.2,
+                shadowRadius: 4,
+                elevation: 3
+              }}>
+                <FontAwesomeIcon icon={faGlassWater} size={24} color={primaryColor} />
               </View>
-              <ProgressBar
-                progress={percentage / 100}
-                color={theme.colors.primary}
-                style={styles.progressBar}
-              />
+              <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>Hızlı Ekle</Text>
             </View>
-          </Card.Content>
-        </Card>
-
-        <Card style={styles.card}>
-          <Card.Content>
-            <Title style={{ color: theme.colors.onSurface }}>Hızlı Ekle</Title>
+            
             <View style={styles.quickAddContainer}>
               {[150, 250, 330, 500].map(amount => (
                 <TouchableOpacity
                   key={`quick-add-${amount}`}
                   style={[
                     styles.amountButton,
-                    { backgroundColor: theme.colors.surfaceVariant },
-                    selectedAmount === amount ? { backgroundColor: theme.colors.primary } : null,
+                    { 
+                      backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.07)' : 'rgba(3, 169, 244, 0.08)',
+                      borderWidth: 1,
+                      borderColor: selectedAmount === amount 
+                        ? primaryColor 
+                        : isDarkMode 
+                          ? 'rgba(255, 255, 255, 0.1)' 
+                          : 'rgba(3, 169, 244, 0.1)',
+                    },
+                    selectedAmount === amount ? { 
+                      backgroundColor: isDarkMode ? 'rgba(3, 169, 244, 0.2)' : 'rgba(3, 169, 244, 0.15)',
+                    } : null,
                   ]}
                   onPress={() => setSelectedAmount(amount)}
                 >
+                  <FontAwesomeIcon 
+                    icon={faDroplet} 
+                    size={18} 
+                    color={selectedAmount === amount ? primaryColor : isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.5)'} 
+                    style={styles.amountButtonIcon} 
+                  />
                   <Text
                     style={[
                       styles.amountButtonText,
                       { color: theme.colors.onSurface },
-                      selectedAmount === amount ? { color: 'white' } : null,
+                      selectedAmount === amount ? { color: primaryColor, fontWeight: 'bold' } : null,
                     ]}
                   >
                     {amount} ml
@@ -175,18 +246,48 @@ const WaterTrackerScreen: React.FC<WaterTrackerScreenProps> = ({ navigation }) =
                 </TouchableOpacity>
               ))}
             </View>
-            <Pressable
+            
+            <TouchableOpacity
               onPress={() => setModalVisible(true)}
-              style={[styles.customAmountButton, { backgroundColor: theme.colors.primary }]}
+              style={[styles.customAmountButton, { 
+                backgroundColor: primaryColor,
+                shadowColor: primaryColor,
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.25,
+                shadowRadius: 8,
+                elevation: 5
+              }]}
             >
-              <Text style={styles.customAmountButtonText}>Özel Miktar</Text>
-            </Pressable>
+              <Text style={styles.customAmountButtonText}>Su Ekle ({selectedAmount} ml)</Text>
+            </TouchableOpacity>
           </Card.Content>
         </Card>
 
-        <Card style={styles.card}>
-          <Card.Content>
-            <Title style={{ color: theme.colors.onSurface }}>Bugünkü Kayıtlar</Title>
+        {/* Today's Records Card */}
+        <Card style={[styles.card, { 
+          backgroundColor: isDarkMode ? '#1E1E2E' : theme.colors.surface,
+          borderWidth: 0,
+        }]}>
+          <Card.Content style={styles.cardContent}>
+            <View style={styles.sectionTitleContainer}>
+              <View style={{
+                backgroundColor: `${primaryColor}20`,
+                width: 50, 
+                height: 50, 
+                borderRadius: 25,
+                justifyContent: 'center',
+                alignItems: 'center',
+                shadowColor: primaryColor,
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.2,
+                shadowRadius: 4,
+                elevation: 3
+              }}>
+                <FontAwesomeIcon icon={faCalendarDay} size={24} color={primaryColor} />
+              </View>
+              <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>Bugünkü Kayıtlar</Text>
+            </View>
+
             <Divider style={styles.divider} />
 
             {waterEntries
@@ -198,35 +299,62 @@ const WaterTrackerScreen: React.FC<WaterTrackerScreenProps> = ({ navigation }) =
               .map((entry: WaterEntry, index: number) => (
                 <View
                   key={`water-entry-${entry.id}-${index}`}
-                  style={[styles.entryItem, { borderBottomColor: theme.colors.surfaceVariant }]}
+                  style={[styles.entryItem, { 
+                    borderBottomColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+                    backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(3, 169, 244, 0.05)', 
+                  }]}
                 >
                   <View style={styles.entryInfo}>
-                    <Text style={[styles.entryAmount, { color: theme.colors.onSurface }]}>
-                      {entry.amount} ml
-                    </Text>
-                    <Text style={[styles.entryTime, { color: theme.colors.onSurfaceVariant }]}>
-                      {getFormattedTime(entry.timestamp)}
-                    </Text>
+                    <View style={styles.entryAmount}>
+                      <FontAwesomeIcon 
+                        icon={faWater} 
+                        size={16} 
+                        color={primaryColor} 
+                        style={{ marginRight: 8 }} 
+                      />
+                      <Text style={[styles.entryAmountText, { color: theme.colors.onSurface }]}>
+                        {entry.amount} ml
+                      </Text>
+                    </View>
+                    <View style={styles.entryTime}>
+                      <FontAwesomeIcon 
+                        icon={faHistory} 
+                        size={12} 
+                        color={isDarkMode ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.4)'} 
+                        style={{ marginRight: 4 }} 
+                      />
+                      <Text style={[styles.entryTimeText, { color: theme.colors.onSurfaceVariant }]}>
+                        {getFormattedTime(entry.timestamp)}
+                      </Text>
+                    </View>
                   </View>
-                  <IconButton
-                    icon={() => (
-                      <FontAwesomeIcon icon={faTrash} color={theme.colors.error} size={20} />
-                    )}
-                    size={20}
+                  <TouchableOpacity
+                    style={styles.deleteButton}
                     onPress={() => handleRemoveWaterEntry(entry.id)}
-                  />
+                  >
+                    <FontAwesomeIcon icon={faTrash} color={theme.colors.error} size={18} />
+                  </TouchableOpacity>
                 </View>
               ))}
 
             {waterEntries.length === 0 && (
-              <Text style={[styles.emptyText, { color: theme.colors.onSurfaceVariant }]}>
-                Bugün henüz su kaydı eklenmemiş.
-              </Text>
+              <View style={styles.emptyContainer}>
+                <FontAwesomeIcon 
+                  icon={faWater} 
+                  size={40} 
+                  color={isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(3, 169, 244, 0.2)'} 
+                  style={{ marginBottom: 16 }} 
+                />
+                <Text style={[styles.emptyText, { color: theme.colors.onSurfaceVariant }]}>
+                  Bugün henüz su kaydı eklenmemiş.
+                </Text>
+              </View>
             )}
           </Card.Content>
         </Card>
       </ScrollView>
 
+      {/* Custom Amount Modal */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -234,59 +362,139 @@ const WaterTrackerScreen: React.FC<WaterTrackerScreenProps> = ({ navigation }) =
         onRequestClose={() => setModalVisible(false)}
       >
         <View style={styles.modalContainer}>
-          <View style={[styles.modalContent, { backgroundColor: theme.colors.surface }]}>
-            <Title style={{ color: theme.colors.onSurface }}>Özel Miktar Ekle</Title>
-            <View style={styles.customAmountInput}>
-              <Pressable
-                onPress={() => setSelectedAmount(Math.max(50, selectedAmount - 50))}
-                style={[styles.amountControlButton, { backgroundColor: theme.colors.primary }]}
-              >
-                <FontAwesomeIcon icon={faMinus} size={18} color="white" />
-              </Pressable>
-              <Text style={[styles.customAmountText, { color: theme.colors.onSurface }]}>
-                {selectedAmount} ml
+          <View style={[styles.modalContent, { 
+            backgroundColor: isDarkMode ? '#1E1E2E' : theme.colors.surface,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 10 },
+            shadowOpacity: 0.3,
+            shadowRadius: 20,
+            elevation: 15,
+          }]}>
+            <Title style={{ color: theme.colors.onSurface, marginBottom: 20 }}>Özel Miktar Ekle</Title>
+            
+            <View style={styles.customAmountInputContainer}>
+              <Text style={[styles.customAmountLabel, { color: theme.colors.onSurfaceVariant }]}>
+                Miktar seçin:
               </Text>
-              <Pressable
-                onPress={() => setSelectedAmount(selectedAmount + 50)}
-                style={[styles.amountControlButton, { backgroundColor: theme.colors.primary }]}
-              >
-                <FontAwesomeIcon icon={faPlus} size={18} color="white" />
-              </Pressable>
+              <View style={styles.customAmountInput}>
+                <TouchableOpacity
+                  onPress={() => setSelectedAmount(Math.max(50, selectedAmount - 50))}
+                  style={[styles.amountControlButton, { 
+                    backgroundColor: primaryColor,
+                    shadowColor: primaryColor,
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.2,
+                    shadowRadius: 3,
+                    elevation: 2
+                  }]}
+                >
+                  <FontAwesomeIcon icon={faMinus} size={18} color="white" />
+                </TouchableOpacity>
+                <Text style={[styles.customAmountText, { color: theme.colors.onSurface }]}>
+                  {selectedAmount} ml
+                </Text>
+                <TouchableOpacity
+                  onPress={() => setSelectedAmount(selectedAmount + 50)}
+                  style={[styles.amountControlButton, { 
+                    backgroundColor: primaryColor,
+                    shadowColor: primaryColor,
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.2,
+                    shadowRadius: 3,
+                    elevation: 2
+                  }]}
+                >
+                  <FontAwesomeIcon icon={faPlus} size={18} color="white" />
+                </TouchableOpacity>
+              </View>
             </View>
+            
+            <View style={styles.quickAmountOptions}>
+              {[100, 200, 300, 400, 500, 600].map(amount => (
+                <TouchableOpacity
+                  key={`modal-amount-${amount}`}
+                  style={[
+                    styles.quickAmountButton,
+                    { 
+                      backgroundColor: selectedAmount === amount 
+                        ? `${primaryColor}20` 
+                        : isDarkMode 
+                          ? 'rgba(255, 255, 255, 0.05)' 
+                          : 'rgba(0, 0, 0, 0.05)',
+                      borderWidth: 1,
+                      borderColor: selectedAmount === amount 
+                        ? primaryColor 
+                        : 'transparent',
+                    },
+                  ]}
+                  onPress={() => setSelectedAmount(amount)}
+                >
+                  <Text
+                    style={[
+                      styles.quickAmountButtonText,
+                      { 
+                        color: selectedAmount === amount 
+                          ? primaryColor 
+                          : theme.colors.onSurfaceVariant 
+                      },
+                    ]}
+                  >
+                    {amount}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            
             <View style={styles.modalButtons}>
-              <Pressable
+              <TouchableOpacity
                 onPress={() => setModalVisible(false)}
                 style={[
                   styles.modalButton,
                   styles.cancelButton,
-                  { borderColor: theme.colors.primary },
+                  { borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)' },
                 ]}
               >
-                <FontAwesomeIcon icon={faXmark} size={18} color={theme.colors.primary} />
-                <Text style={[styles.modalButtonText, { color: theme.colors.primary }]}>İptal</Text>
-              </Pressable>
-              <Pressable
+                <FontAwesomeIcon icon={faXmark} size={18} color={theme.colors.onSurfaceVariant} />
+                <Text style={[styles.modalButtonText, { color: theme.colors.onSurfaceVariant }]}>İptal</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
                 onPress={handleAddWaterEntry}
                 style={[
                   styles.modalButton,
                   styles.confirmButton,
-                  { backgroundColor: theme.colors.primary },
+                  { 
+                    backgroundColor: primaryColor,
+                    shadowColor: primaryColor,
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 8,
+                    elevation: 5
+                  },
                 ]}
               >
                 <FontAwesomeIcon icon={faCheck} size={18} color="white" />
                 <Text style={[styles.modalButtonText, { color: 'white' }]}>Ekle</Text>
-              </Pressable>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
 
+      {/* FAB Button */}
       <FAB
         icon={() => <FontAwesomeIcon icon={faPlus} color="white" size={24} />}
-        style={[styles.fab, { backgroundColor: theme.colors.primary }]}
+        style={[styles.fab, { 
+          backgroundColor: primaryColor,
+          shadowColor: primaryColor,
+          shadowOffset: { width: 0, height: 5 },
+          shadowOpacity: 0.3,
+          shadowRadius: 10,
+          elevation: 8
+        }]}
         onPress={() => setModalVisible(true)}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -295,35 +503,82 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    padding: 16,
-    paddingTop: 48,
+    paddingTop: 50,
+    paddingBottom: 25,
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.2,
+    shadowRadius: 15,
+    elevation: 10,
+  },
+  headerContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 30,
     fontWeight: 'bold',
     color: 'white',
+    marginVertical: 4,
   },
-  headerRight: {
-    flexDirection: 'row',
+  headerSubtitle: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  headerInfo: {
+    fontSize: 14,
+    marginTop: 4,
+  },
+  waterCircleContainer: {
     alignItems: 'center',
   },
   waterCircle: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 8,
+    margin: 10,
+    borderWidth: 0.5,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   waterValue: {
-    fontSize: 24,
+    fontSize: 32,
     fontWeight: 'bold',
   },
-  waterLabel: {
+  waterUnit: {
+    fontSize: 14,
+    marginTop: 2,
+  },
+  waterPercentage: {
+    position: 'absolute',
+    bottom: -5,
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  waterPercentageText: {
     fontSize: 12,
+    fontWeight: 'bold',
+  },
+  progressContainer: {
+    marginTop: 20,
+    marginBottom: 5,
+  },
+  progressBarContainer: {
+    width: '100%',
+    height: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progressBar: {
+    height: '100%',
+    borderRadius: 4,
   },
   content: {
     flex: 1,
@@ -331,47 +586,55 @@ const styles = StyleSheet.create({
   },
   card: {
     marginBottom: 16,
+    borderRadius: 24,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
   },
-  progressContainer: {
-    padding: 4,
+  cardContent: {
+    padding: 16,
   },
-  progressHeader: {
+  sectionTitleContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 20,
   },
-  progressText: {
-    fontSize: 16,
+  cardTitle: {
+    fontSize: 20,
     fontWeight: 'bold',
-  },
-  progressBar: {
-    height: 10,
-    borderRadius: 5,
+    marginLeft: 12,
   },
   quickAddContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginTop: 16,
+    marginBottom: 16,
   },
   amountButton: {
     width: '48%',
-    paddingVertical: 12,
+    padding: 15,
     alignItems: 'center',
-    borderRadius: 8,
-    marginBottom: 10,
+    borderRadius: 16,
+    marginBottom: 12,
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  amountButtonIcon: {
+    marginRight: 8,
   },
   amountButtonText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '500',
   },
   customAmountButton: {
     width: '100%',
-    paddingVertical: 12,
+    paddingVertical: 15,
     alignItems: 'center',
-    borderRadius: 8,
-    marginTop: 6,
+    borderRadius: 16,
+    marginTop: 8,
   },
   customAmountButtonText: {
     color: 'white',
@@ -379,72 +642,122 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   divider: {
-    marginVertical: 12,
+    marginBottom: 16,
   },
   entryItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 10,
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 12,
     borderBottomWidth: 1,
   },
   entryInfo: {
-    flexDirection: 'column',
+    flex: 1,
   },
   entryAmount: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  entryAmountText: {
     fontSize: 16,
     fontWeight: 'bold',
   },
   entryTime: {
-    fontSize: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  entryTimeText: {
+    fontSize: 14,
+  },
+  deleteButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 20,
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
   },
   emptyText: {
     textAlign: 'center',
-    marginVertical: 20,
+    fontSize: 16,
     fontStyle: 'italic',
   },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
   },
   modalContent: {
-    width: '80%',
-    padding: 20,
-    borderRadius: 12,
+    width: '90%',
+    padding: 24,
+    borderRadius: 24,
     alignItems: 'center',
+  },
+  customAmountInputContainer: {
+    width: '100%',
+    marginBottom: 20,
+  },
+  customAmountLabel: {
+    fontSize: 16,
+    marginBottom: 10,
   },
   customAmountInput: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     width: '100%',
-    marginVertical: 20,
   },
   amountControlButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
   },
   customAmountText: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
+    paddingHorizontal: 20,
+  },
+  quickAmountOptions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 20,
+  },
+  quickAmountButton: {
+    width: '30%',
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderRadius: 12,
+    marginBottom: 10,
+  },
+  quickAmountButtonText: {
+    fontSize: 16,
+    fontWeight: '500',
   },
   modalButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
+    marginTop: 10,
   },
   modalButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 16,
     width: '48%',
   },
   cancelButton: {
@@ -455,11 +768,17 @@ const styles = StyleSheet.create({
   modalButtonText: {
     fontWeight: 'bold',
     marginLeft: 6,
+    fontSize: 16,
   },
   fab: {
     position: 'absolute',
-    right: 16,
-    bottom: 16,
+    right: 20,
+    bottom: 20,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

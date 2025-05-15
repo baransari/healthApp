@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
 import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
@@ -12,9 +12,11 @@ import {
   faWeight,
   faEgg,
   faBreadSlice,
-  faOilCan
+  faOilCan,
+  faAppleAlt,
+  faPlus
 } from '@fortawesome/free-solid-svg-icons';
-import { Button, Card, Divider } from '../utils/paperComponents';
+import { Button, Card, Divider, Chip } from '../utils/paperComponents';
 import type { ExtendedMD3Theme } from '../types';
 import useFoodTracker from '../hooks/useFoodTracker';
 import { FoodData } from '../data/foodDatabase';
@@ -32,7 +34,7 @@ interface FoodDetailsScreenProps {
 }
 
 const FoodDetailsScreen: React.FC<FoodDetailsScreenProps> = ({ route, navigation }) => {
-  const { theme } = useTheme();
+  const { theme, isDarkMode } = useTheme();
   const { foodId } = route.params;
   const [food, setFood] = useState<FoodData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -78,56 +80,124 @@ const FoodDetailsScreen: React.FC<FoodDetailsScreenProps> = ({ route, navigation
 
   if (loading) {
     return (
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <Text style={{ color: theme.colors.onBackground }}>Yükleniyor...</Text>
-      </View>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
+        <View style={styles.centerContent}>
+          <Text style={{ color: theme.colors.onBackground }}>Yükleniyor...</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
   if (!food) {
     return (
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <Text style={{ color: theme.colors.onBackground }}>
-          Yiyecek bulunamadı. Lütfen tekrar deneyin.
-        </Text>
-        <Button 
-          mode="contained" 
-          onPress={() => navigation.goBack()}
-          style={{ marginTop: 20 }}
-        >
-          Geri Dön
-        </Button>
-      </View>
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
+        <View style={styles.centerContent}>
+          <Text style={{ color: theme.colors.onBackground, marginBottom: 16 }}>
+            Yiyecek bulunamadı. Lütfen tekrar deneyin.
+          </Text>
+          <Button 
+            mode="contained" 
+            onPress={() => navigation.goBack()}
+            style={{ width: 200 }}
+          >
+            Geri Dön
+          </Button>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <View style={[styles.header, { backgroundColor: theme.colors.primary }]}>
-        <TouchableOpacity 
-          style={styles.backButton} 
-          onPress={() => navigation.goBack()}
-        >
-          <FontAwesomeIcon 
-            icon={faArrowLeft} 
-            size={24} 
-            color={theme.colors.onPrimary} 
-          />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: theme.colors.onPrimary }]}>
-          {food.name}
-        </Text>
-        <View style={styles.headerPlaceholder} />
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
+      {/* Header Section - Modern and vibrant design with gradient */}
+      <View 
+        style={[
+          styles.headerContainer, 
+          { 
+            backgroundColor: theme.colors.primary,
+            shadowColor: theme.colors.primary,
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.25,
+            shadowRadius: 8,
+            elevation: 8
+          }
+        ]}
+      >
+        <View style={styles.headerContent}>
+          <TouchableOpacity 
+            style={styles.backButton} 
+            onPress={() => navigation.goBack()}
+          >
+            <FontAwesomeIcon 
+              icon={faArrowLeft} 
+              size={24} 
+              color="white" 
+            />
+          </TouchableOpacity>
+          <View style={styles.headerTextContainer}>
+            <Text style={[styles.headerSubtitle, { color: 'rgba(255, 255, 255, 0.9)' }]}>
+              Besin Bilgisi
+            </Text>
+            <Text style={[styles.headerTitle, { color: '#fff' }]}>
+              {food.name}
+            </Text>
+          </View>
+          <Chip
+            icon={() => (
+              <FontAwesomeIcon icon={faAppleAlt} size={14} color="#FFD54F" />
+            )}
+            style={[styles.categoryChip, { 
+              backgroundColor: 'rgba(255, 255, 255, 0.25)',
+              borderWidth: 1,
+              borderColor: 'rgba(255, 255, 255, 0.5)'
+            }]}
+          >
+            {food.category}
+          </Chip>
+        </View>
       </View>
 
-      <ScrollView style={styles.content}>
-        <Card style={styles.infoCard}>
+      <ScrollView
+        style={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 20, paddingHorizontal: 16 }}
+      >
+        {/* Food Info Card */}
+        <Card 
+          style={[
+            styles.infoCard, 
+            { 
+              backgroundColor: isDarkMode ? '#1E1E2E' : theme.colors.surface,
+              borderRadius: 24,
+              shadowColor: isDarkMode ? theme.colors.primary : '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.1,
+              shadowRadius: 12,
+              elevation: 8,
+              marginTop: 16,
+              overflow: 'hidden',
+              borderWidth: 0
+            }
+          ]}
+        >
           <View style={styles.foodIconContainer}>
-            <View style={[styles.iconCircle, { backgroundColor: theme.colors.primaryContainer }]}>
+            <View 
+              style={[
+                styles.iconCircle, 
+                { 
+                  backgroundColor: `${theme.colors.primary}20`,
+                  shadowColor: theme.colors.primary,
+                  shadowOffset: { width: 0, height: 3 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 4,
+                  elevation: 3
+                }
+              ]}
+            >
               <FontAwesomeIcon 
                 icon={faUtensils} 
                 size={40} 
-                color={theme.colors.onPrimaryContainer} 
+                color={theme.colors.primary} 
               />
             </View>
             <Text style={[styles.foodName, { color: theme.colors.onBackground }]}>
@@ -143,13 +213,31 @@ const FoodDetailsScreen: React.FC<FoodDetailsScreenProps> = ({ route, navigation
 
           <Divider style={styles.divider} />
 
+          {/* Nutrition Info Section */}
           <View style={styles.nutritionContainer}>
-            <Text style={[styles.nutritionTitle, { color: theme.colors.onBackground }]}>
-              Besin Değerleri
-            </Text>
+            <View style={styles.sectionTitleContainer}>
+              <View style={{
+                backgroundColor: `${theme.colors.secondary}20`,
+                width: 40, 
+                height: 40, 
+                borderRadius: 20,
+                justifyContent: 'center',
+                alignItems: 'center',
+                shadowColor: theme.colors.secondary,
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.2,
+                shadowRadius: 4,
+                elevation: 3
+              }}>
+                <FontAwesomeIcon icon={faAppleAlt} size={20} color={theme.colors.secondary} />
+              </View>
+              <Text style={[styles.nutritionTitle, { color: theme.colors.onBackground }]}>
+                Besin Değerleri
+              </Text>
+            </View>
             
             <View style={styles.nutritionItem}>
-              <View style={[styles.nutritionIconContainer, { backgroundColor: theme.colors.errorContainer }]}>
+              <View style={[styles.nutritionIconContainer, { backgroundColor: `${theme.colors.error}20` }]}>
                 <FontAwesomeIcon icon={faFire} size={18} color={theme.colors.error} />
               </View>
               <View style={styles.nutritionTextContainer}>
@@ -163,7 +251,7 @@ const FoodDetailsScreen: React.FC<FoodDetailsScreenProps> = ({ route, navigation
             </View>
 
             <View style={styles.nutritionItem}>
-              <View style={[styles.nutritionIconContainer, { backgroundColor: theme.colors.primaryContainer }]}>
+              <View style={[styles.nutritionIconContainer, { backgroundColor: `${theme.colors.primary}20` }]}>
                 <FontAwesomeIcon icon={faEgg} size={18} color={theme.colors.primary} />
               </View>
               <View style={styles.nutritionTextContainer}>
@@ -177,7 +265,7 @@ const FoodDetailsScreen: React.FC<FoodDetailsScreenProps> = ({ route, navigation
             </View>
 
             <View style={styles.nutritionItem}>
-              <View style={[styles.nutritionIconContainer, { backgroundColor: theme.colors.secondaryContainer }]}>
+              <View style={[styles.nutritionIconContainer, { backgroundColor: `${theme.colors.secondary}20` }]}>
                 <FontAwesomeIcon icon={faBreadSlice} size={18} color={theme.colors.secondary} />
               </View>
               <View style={styles.nutritionTextContainer}>
@@ -191,7 +279,7 @@ const FoodDetailsScreen: React.FC<FoodDetailsScreenProps> = ({ route, navigation
             </View>
 
             <View style={styles.nutritionItem}>
-              <View style={[styles.nutritionIconContainer, { backgroundColor: theme.colors.tertiaryContainer }]}>
+              <View style={[styles.nutritionIconContainer, { backgroundColor: `${theme.colors.tertiary}20` }]}>
                 <FontAwesomeIcon icon={faOilCan} size={18} color={theme.colors.tertiary} />
               </View>
               <View style={styles.nutritionTextContainer}>
@@ -206,7 +294,7 @@ const FoodDetailsScreen: React.FC<FoodDetailsScreenProps> = ({ route, navigation
 
             {food.nutrition.fiber !== undefined && (
               <View style={styles.nutritionItem}>
-                <View style={[styles.nutritionIconContainer, { backgroundColor: theme.colors.primaryContainer }]}>
+                <View style={[styles.nutritionIconContainer, { backgroundColor: `${theme.colors.primary}20` }]}>
                   <FontAwesomeIcon icon={faWeight} size={18} color={theme.colors.primary} />
                 </View>
                 <View style={styles.nutritionTextContainer}>
@@ -219,173 +307,279 @@ const FoodDetailsScreen: React.FC<FoodDetailsScreenProps> = ({ route, navigation
                 </View>
               </View>
             )}
-
-            {food.nutrition.sugar !== undefined && (
-              <View style={styles.nutritionItem}>
-                <View style={[styles.nutritionIconContainer, { backgroundColor: theme.colors.errorContainer }]}>
-                  <FontAwesomeIcon icon={faWeight} size={18} color={theme.colors.error} />
-                </View>
-                <View style={styles.nutritionTextContainer}>
-                  <Text style={[styles.nutritionLabel, { color: theme.colors.onBackground }]}>
-                    Şeker
-                  </Text>
-                  <Text style={[styles.nutritionValue, { color: theme.colors.onBackground }]}>
-                    {food.nutrition.sugar} g
-                  </Text>
-                </View>
-              </View>
-            )}
           </View>
         </Card>
 
-        <View style={styles.actionsContainer}>
-          <Text style={[styles.addToMealTitle, { color: theme.colors.onBackground }]}>
-            Öğüne Ekle
-          </Text>
-          
-          <View style={styles.mealButtonsContainer}>
-            <Button
-              mode="contained"
-              onPress={() => handleAddFood('breakfast')}
-              style={[styles.mealButton, { backgroundColor: theme.colors.primary }]}
-            >
-              Kahvaltı
-            </Button>
+        {/* Add to Meal Card */}
+        <Card 
+          style={[
+            styles.addMealCard, 
+            { 
+              backgroundColor: isDarkMode ? '#1E1E2E' : theme.colors.surface,
+              borderRadius: 24,
+              shadowColor: isDarkMode ? theme.colors.primary : '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.1,
+              shadowRadius: 12,
+              elevation: 8,
+              marginTop: 16,
+              overflow: 'hidden',
+              borderWidth: 0
+            }
+          ]}
+        >
+          <View style={styles.addMealSection}>
+            <View style={styles.sectionTitleContainer}>
+              <View style={{
+                backgroundColor: `${theme.colors.primary}20`,
+                width: 40, 
+                height: 40, 
+                borderRadius: 20,
+                justifyContent: 'center',
+                alignItems: 'center',
+                shadowColor: theme.colors.primary,
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.2,
+                shadowRadius: 4,
+                elevation: 3
+              }}>
+                <FontAwesomeIcon icon={faPlus} size={20} color={theme.colors.primary} />
+              </View>
+              <Text style={[styles.addMealTitle, { color: theme.colors.onBackground }]}>
+                Öğüne Ekle
+              </Text>
+            </View>
+
+            <Text style={[styles.addMealSubtitle, { color: theme.colors.onSurfaceVariant }]}>
+              Bu yiyeceği hangi öğüne eklemek istiyorsunuz?
+            </Text>
             
-            <Button
-              mode="contained"
-              onPress={() => handleAddFood('lunch')}
-              style={[styles.mealButton, { backgroundColor: theme.colors.secondary }]}
-            >
-              Öğle Yemeği
-            </Button>
-            
-            <Button
-              mode="contained"
-              onPress={() => handleAddFood('dinner')}
-              style={[styles.mealButton, { backgroundColor: theme.colors.tertiary }]}
-            >
-              Akşam Yemeği
-            </Button>
-            
-            <Button
-              mode="contained"
-              onPress={() => handleAddFood('snack')}
-              style={[styles.mealButton, { backgroundColor: theme.colors.primary }]}
-            >
-              Atıştırmalık
-            </Button>
+            <View style={styles.mealButtonsContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.mealButton,
+                  {
+                    backgroundColor: theme.colors.primary,
+                    shadowColor: theme.colors.primary,
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 8,
+                    elevation: 5
+                  }
+                ]}
+                onPress={() => handleAddFood('breakfast')}
+              >
+                <Text style={styles.mealButtonText}>Kahvaltı</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[
+                  styles.mealButton,
+                  {
+                    backgroundColor: theme.colors.secondary,
+                    shadowColor: theme.colors.secondary,
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 8,
+                    elevation: 5
+                  }
+                ]}
+                onPress={() => handleAddFood('lunch')}
+              >
+                <Text style={styles.mealButtonText}>Öğle Yemeği</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[
+                  styles.mealButton,
+                  {
+                    backgroundColor: theme.colors.tertiary,
+                    shadowColor: theme.colors.tertiary,
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 8,
+                    elevation: 5
+                  }
+                ]}
+                onPress={() => handleAddFood('dinner')}
+              >
+                <Text style={styles.mealButtonText}>Akşam Yemeği</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[
+                  styles.mealButton,
+                  {
+                    backgroundColor: theme.colors.secondary,
+                    shadowColor: theme.colors.secondary,
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 8,
+                    elevation: 5
+                  }
+                ]}
+                onPress={() => handleAddFood('snack')}
+              >
+                <Text style={styles.mealButtonText}>Ara Öğün</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        </Card>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
   },
-  header: {
+  centerContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  headerContainer: {
+    paddingTop: 20,
+    paddingBottom: 20,
+    paddingHorizontal: 16,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+  },
+  headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
   },
   backButton: {
-    padding: 8,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    marginRight: 12,
+  },
+  headerTextContainer: {
+    flex: 1,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
   },
-  headerPlaceholder: {
-    width: 40,
+  headerSubtitle: {
+    fontSize: 14,
+    opacity: 0.8,
   },
-  content: {
+  categoryChip: {
+    borderRadius: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  scrollContent: {
     flex: 1,
-    padding: 16,
   },
   infoCard: {
+    overflow: 'hidden',
     padding: 16,
-    marginBottom: 16,
   },
   foodIconContainer: {
     alignItems: 'center',
-    marginBottom: 16,
+    marginVertical: 16,
   },
   iconCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 16,
   },
   foodName: {
     fontSize: 24,
     fontWeight: 'bold',
-    textAlign: 'center',
+    marginBottom: 8,
   },
   foodCategory: {
     fontSize: 16,
-    textAlign: 'center',
-    marginTop: 4,
+    marginBottom: 8,
   },
   portionInfo: {
     fontSize: 14,
-    textAlign: 'center',
-    marginTop: 8,
   },
   divider: {
     marginVertical: 16,
   },
   nutritionContainer: {
-    marginTop: 8,
+    paddingVertical: 8,
+  },
+  sectionTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16, 
   },
   nutritionTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 16,
+    marginLeft: 12,
   },
   nutritionItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
+    paddingHorizontal: 8,
   },
   nutritionIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 16,
   },
   nutritionTextContainer: {
     flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
   nutritionLabel: {
-    fontSize: 14,
+    fontSize: 16,
   },
   nutritionValue: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
   },
-  actionsContainer: {
-    marginTop: 8,
-    marginBottom: 24,
-  },
-  addToMealTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+  addMealCard: {
+    padding: 16,
     marginBottom: 16,
   },
+  addMealSection: {
+    paddingVertical: 8,
+  },
+  addMealTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginLeft: 12,
+  },
+  addMealSubtitle: {
+    fontSize: 14,
+    marginTop: 8,
+    marginBottom: 20,
+    paddingHorizontal: 8,
+  },
   mealButtonsContainer: {
+    flexDirection: 'column',
     gap: 12,
   },
   mealButton: {
-    marginBottom: 8,
+    padding: 16,
+    borderRadius: 16,
+    alignItems: 'center',
+  },
+  mealButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });
 
