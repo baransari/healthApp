@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   ScrollView,
@@ -9,6 +9,10 @@ import {
   Pressable,
   TextInput,
   SafeAreaView,
+  FlatList,
+  Image,
+  Platform,
+  RefreshControl,
 } from 'react-native';
 // Import from paperComponents utility
 import { Card, Divider, Button, Chip, IconButton, ProgressBar, Surface } from '../utils/paperComponents';
@@ -18,6 +22,8 @@ import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { RootStackParamList, MainTabParamList } from '../navigation/types';
 import useTheme from '../hooks/useTheme';
 import type { ExtendedMD3Theme } from '../types';
+import useFoodTracker from '../hooks/useFoodTracker';
+import { FoodEntry, Nutrition } from '../store/foodTrackerSlice';
 
 // Font Awesome icons
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
@@ -46,6 +52,8 @@ import {
   faCubes,
   faOilCan,
   faFish,
+  faTrashAlt,
+  faTimes,
 } from '@fortawesome/free-solid-svg-icons';
 
 // Define navigation type
@@ -75,110 +83,141 @@ const CalorieTrackerScreen: React.FC<CalorieTrackerScreenProps> = ({ navigation 
   const [selectedMeal, setSelectedMeal] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>(
     'breakfast',
   );
+  
+  // Yemek takibi hook'unu kullan
+  const {
+    entries,
+    todayEntries,
+    goals,
+    addFood,
+    removeFood,
+    dailyNutrition,
+    goalPercentages,
+    getEntriesByMealType
+  } = useFoodTracker();
+  
+  // API'den yüklenen besin veritabanı
+  const [foodDatabase, setFoodDatabase] = useState<FoodItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // Günlük yemek verileri doğrudan food tracker'dan alınıyor
+  const dailyFood = {
+    breakfast: getEntriesByMealType('breakfast'),
+    lunch: getEntriesByMealType('lunch'),
+    dinner: getEntriesByMealType('dinner'),
+    snack: getEntriesByMealType('snack')
+  };
 
-  // Örnek besin veritabanı
-  const foodDatabase: FoodItem[] = [
-    {
-      id: '1',
-      name: 'Elma',
-      calories: 52,
-      protein: 0.3,
-      carbs: 14,
-      fat: 0.2,
-      fiber: 2.4,
-      sugar: 10.3,
-      portion: '1 orta boy (100g)',
-      category: 'meyve'
-    },
-    {
-      id: '2',
-      name: 'Tavuk Göğsü',
-      calories: 165,
-      protein: 31,
-      carbs: 0,
-      fat: 3.6,
-      portion: '100g',
-      category: 'tavuk'
-    },
-    {
-      id: '3',
-      name: 'Yulaf Ezmesi',
-      calories: 389,
-      protein: 16.9,
-      carbs: 66.3,
-      fat: 6.9,
-      fiber: 10.6,
-      portion: '100g',
-      category: 'tahil'
-    },
-    {
-      id: '4',
-      name: 'Tam Buğday Ekmeği',
-      calories: 247,
-      protein: 13,
-      carbs: 41,
-      fat: 3,
-      fiber: 7,
-      portion: '100g',
-      category: 'tahil'
-    },
-    {
-      id: '5',
-      name: 'Muz',
-      calories: 89,
-      protein: 1.1,
-      carbs: 22.8,
-      fat: 0.3,
-      fiber: 2.6,
-      sugar: 12.2,
-      portion: '1 orta boy (100g)',
-      category: 'meyve'
-    },
-    {
-      id: '6',
-      name: 'Somon',
-      calories: 208,
-      protein: 20,
-      carbs: 0,
-      fat: 13,
-      portion: '100g',
-      category: 'balik'
-    },
-    {
-      id: '7',
-      name: 'Avokado',
-      calories: 160,
-      protein: 2,
-      carbs: 8.5,
-      fat: 14.7,
-      fiber: 6.7,
-      portion: '100g',
-      category: 'meyve'
-    },
-    {
-      id: '8',
-      name: 'Tam Yağlı Süt',
-      calories: 61,
-      protein: 3.2,
-      carbs: 4.8,
-      fat: 3.3,
-      portion: '100ml',
-      category: 'sut_urunleri'
-    },
-  ];
-
-  // Günlük besin kaydı
-  const [dailyFood, setDailyFood] = useState<{
-    breakfast: FoodItem[];
-    lunch: FoodItem[];
-    dinner: FoodItem[];
-    snack: FoodItem[];
-  }>({
-    breakfast: [foodDatabase[2], foodDatabase[7]],
-    lunch: [foodDatabase[1], foodDatabase[3]],
-    dinner: [foodDatabase[5]],
-    snack: [foodDatabase[0]],
-  });
+  // Örnek besin veritabanını yükle - gerçek uygulamada API'den gelecek
+  useEffect(() => {
+    const loadFoodDatabase = async () => {
+      setIsLoading(true);
+      try {
+        // Gerçek uygulamada burada bir API çağrısı yapılacak
+        // API çağrısını simüle edelim
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Örnek veriler - gerçek uygulamada API'den gelecek
+        const foodData: FoodItem[] = [
+          {
+            id: '1',
+            name: 'Elma',
+            calories: 52,
+            protein: 0.3,
+            carbs: 14,
+            fat: 0.2,
+            fiber: 2.4,
+            sugar: 10.3,
+            portion: '1 orta boy (100g)',
+            category: 'meyve'
+          },
+          {
+            id: '2',
+            name: 'Tavuk Göğsü',
+            calories: 165,
+            protein: 31,
+            carbs: 0,
+            fat: 3.6,
+            portion: '100g',
+            category: 'tavuk'
+          },
+          {
+            id: '3',
+            name: 'Yulaf Ezmesi',
+            calories: 389,
+            protein: 16.9,
+            carbs: 66.3,
+            fat: 6.9,
+            fiber: 10.6,
+            portion: '100g',
+            category: 'tahil'
+          },
+          {
+            id: '4',
+            name: 'Tam Buğday Ekmeği',
+            calories: 247,
+            protein: 13,
+            carbs: 41,
+            fat: 3,
+            fiber: 7,
+            portion: '100g',
+            category: 'tahil'
+          },
+          {
+            id: '5',
+            name: 'Muz',
+            calories: 89,
+            protein: 1.1,
+            carbs: 22.8,
+            fat: 0.3,
+            fiber: 2.6,
+            sugar: 12.2,
+            portion: '1 orta boy (100g)',
+            category: 'meyve'
+          },
+          {
+            id: '6',
+            name: 'Somon',
+            calories: 208,
+            protein: 20,
+            carbs: 0,
+            fat: 13,
+            portion: '100g',
+            category: 'balik'
+          },
+          {
+            id: '7',
+            name: 'Avokado',
+            calories: 160,
+            protein: 2,
+            carbs: 8.5,
+            fat: 14.7,
+            fiber: 6.7,
+            portion: '100g',
+            category: 'meyve'
+          },
+          {
+            id: '8',
+            name: 'Tam Yağlı Süt',
+            calories: 61,
+            protein: 3.2,
+            carbs: 4.8,
+            fat: 3.3,
+            portion: '100ml',
+            category: 'sut_urunleri'
+          },
+        ];
+        
+        setFoodDatabase(foodData);
+      } catch (error) {
+        console.error('Besin veritabanı yüklenirken hata:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadFoodDatabase();
+  }, []);
 
   // Filtrelenmiş besinler
   const filteredFoods = searchQuery
@@ -187,10 +226,21 @@ const CalorieTrackerScreen: React.FC<CalorieTrackerScreenProps> = ({ navigation 
 
   // Yardımcı fonksiyonlar
   const addFoodToMeal = (food: FoodItem) => {
-    setDailyFood({
-      ...dailyFood,
-      [selectedMeal]: [...dailyFood[selectedMeal], food],
+    // FoodItem'ı FoodEntry formatına dönüştür
+    addFood({
+      name: food.name,
+      mealType: selectedMeal,
+      amount: 100, // Varsayılan miktar (gram/ml)
+      nutrition: {
+        calories: food.calories,
+        protein: food.protein,
+        carbs: food.carbs,
+        fat: food.fat,
+        fiber: food.fiber,
+        sugar: food.sugar
+      }
     });
+    
     setModalVisible(false);
     setSearchQuery('');
   };
@@ -199,54 +249,38 @@ const CalorieTrackerScreen: React.FC<CalorieTrackerScreenProps> = ({ navigation 
     mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack',
     foodId: string,
   ) => {
-    setDailyFood({
-      ...dailyFood,
-      [mealType]: dailyFood[mealType].filter(item => item.id !== foodId),
-    });
+    // useFoodTracker hook'unu kullanarak yemek kaydını sil
+    removeFood(foodId);
   };
 
   const calculateTotalCalories = () => {
-    const allFoods = [
-      ...dailyFood.breakfast,
-      ...dailyFood.lunch,
-      ...dailyFood.dinner,
-      ...dailyFood.snack,
-    ];
-
-    return allFoods.reduce((total, food) => total + food.calories, 0);
+    return dailyNutrition.calories;
   };
 
-  const calculateNutrients = (foods: FoodItem[]) => {
+  const calculateNutrients = (foods: FoodEntry[]) => {
     return foods.reduce(
       (acc, food) => {
-        acc.calories += food.calories;
-        acc.protein += food.protein;
-        acc.carbs += food.carbs;
-        acc.fat += food.fat;
-        if (food.fiber) acc.fiber += food.fiber;
-        if (food.sugar) acc.sugar += food.sugar;
+        acc.calories += food.nutrition.calories;
+        acc.protein += food.nutrition.protein;
+        acc.carbs += food.nutrition.carbs;
+        acc.fat += food.nutrition.fat;
+        if (food.nutrition.fiber && acc.fiber !== undefined) acc.fiber += food.nutrition.fiber;
+        if (food.nutrition.sugar && acc.sugar !== undefined) acc.sugar += food.nutrition.sugar;
         return acc;
       },
-      { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, sugar: 0 },
+      { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, sugar: 0 } as Nutrition,
     );
   };
   
   const calculateTotalNutrients = () => {
-    const allFoods = [
-      ...dailyFood.breakfast,
-      ...dailyFood.lunch,
-      ...dailyFood.dinner,
-      ...dailyFood.snack,
-    ];
-    
-    return calculateNutrients(allFoods);
+    return dailyNutrition;
   };
 
-  // Hedefler ve ilerleme
-  const calorieGoal = 2500;
-  const proteinGoal = 140;
-  const carbsGoal = 300;
-  const fatGoal = 80;
+  // Hedefler Redux'tan geliyor
+  const calorieGoal = goals.calories;
+  const proteinGoal = goals.protein;
+  const carbsGoal = goals.carbs;
+  const fatGoal = goals.fat;
   
   // İlerleme hesaplamaları
   const calculateProgressPercentage = (current: number, goal: number) => {
@@ -409,19 +443,19 @@ const CalorieTrackerScreen: React.FC<CalorieTrackerScreenProps> = ({ navigation 
                       <View style={styles.foodNameContainer}>
                         <View style={[styles.foodIconContainer, { backgroundColor: `${accentColor}15` }]}>
                           <FontAwesomeIcon
-                            icon={getFoodIcon(food.name, food.category)}
+                            icon={getFoodIcon(food.name)}
                             size={16}
                             color={accentColor}
                           />
                         </View>
                         <View>
                           <Text style={[styles.foodName, { color: isDarkMode ? 'white' : '#333' }]}>{food.name}</Text>
-                          <Text style={[styles.foodPortion, { color: isDarkMode ? 'rgba(255,255,255,0.6)' : '#666' }]}>{food.portion}</Text>
+                          <Text style={[styles.foodPortion, { color: isDarkMode ? 'rgba(255,255,255,0.6)' : '#666' }]}>{`${food.amount}g`}</Text>
                         </View>
                       </View>
                     </View>
                     <View style={styles.foodNutrients}>
-                      <Text style={[styles.calorieLabelText, { color: accentColor }]}>{food.calories} kcal</Text>
+                      <Text style={[styles.calorieLabelText, { color: accentColor }]}>{food.nutrition.calories} kcal</Text>
                       <TouchableOpacity 
                         onPress={() => removeFoodFromMeal(mealType, food.id)}
                         style={[styles.removeButton, { backgroundColor: isDarkMode ? 'rgba(244, 67, 54, 0.1)' : 'rgba(244, 67, 54, 0.08)' }]}
@@ -671,7 +705,7 @@ const CalorieTrackerScreen: React.FC<CalorieTrackerScreenProps> = ({ navigation 
                   <View style={styles.foodResultLeft}>
                     <View style={[styles.resultIconContainer, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : `${primaryColor}15` }]}>
                       <FontAwesomeIcon
-                        icon={getFoodIcon(food.name, food.category)}
+                        icon={getFoodIcon(food.name)}
                         size={18}
                         color={primaryColor}
                       />

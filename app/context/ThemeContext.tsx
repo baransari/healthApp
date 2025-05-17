@@ -124,6 +124,15 @@ export const ThemeProvider: React.FunctionComponent<{ children: React.ReactNode 
     setTheme
   };
 
+  // Theme değişikliğinde React Native'e bildir
+  useEffect(() => {
+    if (isDarkMode) {
+      themeEvents.emitDarkModeChange(true);
+    } else {
+      themeEvents.emitDarkModeChange(false);
+    }
+  }, [isDarkMode]);
+
   return (
     <ThemeContext.Provider value={contextValue}>
       {children}

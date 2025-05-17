@@ -182,7 +182,7 @@ const AutoUpdaterComponent: React.FC = () => {
               <View style={styles.updateHeader}>
                 <Text style={[
                   styles.updateTitle, 
-                  { color: themeAsAny.colors.onSurface || '#000' }
+                  { color: themeAsAny.colors.onSurface }
                 ]}>
                   Yeni Güncelleme Mevcut
                 </Text>
@@ -191,7 +191,7 @@ const AutoUpdaterComponent: React.FC = () => {
                     <FontAwesomeIcon 
                       icon={faXmark} 
                       size={22} 
-                      color={themeAsAny.colors.onSurfaceVariant || '#666'} 
+                      color={themeAsAny.colors.onSurfaceVariant} 
                     />
                   </TouchableOpacity>
                 )}
@@ -199,14 +199,14 @@ const AutoUpdaterComponent: React.FC = () => {
 
               <Text style={[
                 styles.versionText, 
-                { color: themeAsAny.colors.primary || '#4285F4' }
+                { color: themeAsAny.colors.primary }
               ]}>
                 Sürüm {updateAvailable.version}
               </Text>
 
               <Text style={[
                 styles.featuresTitle,
-                { color: themeAsAny.colors.onSurface || '#000' }
+                { color: themeAsAny.colors.onSurface }
               ]}>
                 Yenilikler:
               </Text>
@@ -214,7 +214,7 @@ const AutoUpdaterComponent: React.FC = () => {
               {updateAvailable.features.map((feature, index) => (
                 <Text key={index} style={[
                   styles.featureItem,
-                  { color: themeAsAny.colors.onSurfaceVariant || '#333' }
+                  { color: themeAsAny.colors.onSurfaceVariant }
                 ]}>
                   • {feature}
                 </Text>

@@ -22,9 +22,10 @@ import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { RootStackParamList, MainTabParamList } from '../navigation/types';
 import useFoodTracker from '../hooks/useFoodTracker';
 import { DailyGoals } from '../store/foodTrackerSlice';
+import useAuth from '../hooks/useAuth';
 
 type NutritionGoalsScreenNavigationProp = CompositeNavigationProp<
-  BottomTabNavigationProp<MainTabParamList, 'FoodTracker'>,
+  BottomTabNavigationProp<MainTabParamList>,
   NativeStackNavigationProp<RootStackParamList>
 >;
 
@@ -150,6 +151,7 @@ const NutritionGoalsScreen: React.FC<NutritionGoalsScreenProps> = ({ navigation 
   const theme = useTheme();
   const themeAsAny = theme as any;
   const { goals, updateNutritionGoals } = useFoodTracker();
+  const { user } = useAuth();
 
   const [formValues, setFormValues] = useState<DailyGoals>({
     calories: goals?.calories || 2000,
@@ -273,7 +275,7 @@ const NutritionGoalsScreen: React.FC<NutritionGoalsScreenProps> = ({ navigation 
     );
 
     const suggestedValues: DailyGoals = {
-      calories: recommendedCalories,
+      calories: user?.caloriesGoal || recommendedCalories,
       protein: Math.round(weight * 1.6),
       carbs: Math.round((recommendedCalories * 0.45) / 4),
       fat: Math.round((recommendedCalories * 0.3) / 9),

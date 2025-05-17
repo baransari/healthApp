@@ -704,7 +704,7 @@ const ProfileScreen: React.FunctionComponent<ProfileScreenProps> = () => {
 
           <View style={styles.streakContainer}>
             <FontAwesomeIcon icon={faFire as IconProp} size={24} color="#FF5722" />
-            <Text style={[styles.streakText, { color: themeAsAny.colors.onSurface }]}>5 günlük seri!</Text>
+            <Text style={[styles.streakText, { color: themeAsAny.colors.onSurface }]}>{user.streak || 0} günlük seri!</Text>
           </View>
         </View>
       </PaperCard.Content>

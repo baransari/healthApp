@@ -263,9 +263,9 @@ const NutritionCard = memo<NutritionCardProps>(
               borderWidth: 1,
               borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
             }]}>
-              <Text style={[styles.nutritionLabel, { color: themeAsAny.colors.textSecondary || '#666' }]}>Tüketilen</Text>
+              <Text style={[styles.nutritionLabel, { color: themeAsAny.colors.onSurfaceVariant }]}>Tüketilen</Text>
               <Text style={[styles.nutritionValue, { color: primaryColor }]}>{calories}</Text>
-              <Text style={[styles.nutritionUnit, { color: themeAsAny.colors.textSecondary || '#666' }]}>kalori</Text>
+              <Text style={[styles.nutritionUnit, { color: themeAsAny.colors.onSurfaceVariant }]}>kalori</Text>
             </View>
 
             <View style={[styles.nutritionItem, { 
@@ -273,9 +273,9 @@ const NutritionCard = memo<NutritionCardProps>(
               borderWidth: 1,
               borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
             }]}>
-              <Text style={[styles.nutritionLabel, { color: themeAsAny.colors.textSecondary || '#666' }]}>Kalan</Text>
-              <Text style={[styles.nutritionValue, { color: themeAsAny.colors.text }]}>{remaining}</Text>
-              <Text style={[styles.nutritionUnit, { color: themeAsAny.colors.textSecondary || '#666' }]}>kalori</Text>
+              <Text style={[styles.nutritionLabel, { color: themeAsAny.colors.onSurfaceVariant }]}>Kalan</Text>
+              <Text style={[styles.nutritionValue, { color: themeAsAny.colors.onSurface }]}>{remaining}</Text>
+              <Text style={[styles.nutritionUnit, { color: themeAsAny.colors.onSurfaceVariant }]}>kalori</Text>
             </View>
 
             <View style={[styles.nutritionItem, { 
@@ -283,9 +283,9 @@ const NutritionCard = memo<NutritionCardProps>(
               borderWidth: 1,
               borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
             }]}>
-              <Text style={[styles.nutritionLabel, { color: themeAsAny.colors.textSecondary || '#666' }]}>Hedef</Text>
-              <Text style={[styles.nutritionValue, { color: themeAsAny.colors.text }]}>{caloriesGoal}</Text>
-              <Text style={[styles.nutritionUnit, { color: themeAsAny.colors.textSecondary || '#666' }]}>kalori</Text>
+              <Text style={[styles.nutritionLabel, { color: themeAsAny.colors.onSurfaceVariant }]}>Hedef</Text>
+              <Text style={[styles.nutritionValue, { color: themeAsAny.colors.onSurface }]}>{caloriesGoal}</Text>
+              <Text style={[styles.nutritionUnit, { color: themeAsAny.colors.onSurfaceVariant }]}>kalori</Text>
             </View>
           </View>
           
@@ -372,8 +372,9 @@ const HomeScreen: React.FunctionComponent<HomeScreenProps> = ({ navigation }) =>
     : ['#4285F4', '#5C9CFF'];
 
   // Tracker ve detay sayfalarına yönlendirmek için yardımcı fonksiyon
-  const navigateToTracker = (screen: string, params?: Record<string, any>) => {
-    navigation.navigate(screen as any, params);
+  const navigateToTracker = (screen: keyof RootStackParamList, params?: Record<string, any>) => {
+    // Navigate fonksiyonunu doğrudan çağıralım
+    navigation.navigate(screen, params as any);
   };
 
   return (
@@ -421,7 +422,7 @@ const HomeScreen: React.FunctionComponent<HomeScreenProps> = ({ navigation }) =>
             }]}
             textStyle={[styles.streakChipText, { color: '#fff' }]}
           >
-            {user.streak || 5} günlük seri!
+            {user.streak || 0} günlük seri!
           </Chip>
         </View>
 
@@ -472,7 +473,7 @@ const HomeScreen: React.FunctionComponent<HomeScreenProps> = ({ navigation }) =>
         {/* Workout Progress - Modern ve temiz tasarım */}
         <WorkoutProgressCard
           completedWorkouts={user.completedWorkouts || 0}
-          totalWorkouts={user.totalWorkouts || 12}
+          totalWorkouts={user.totalWorkouts || 0}
           primaryColor={primaryColor}
           onPress={() => navigateToTracker('ExerciseTracker')}
         />
@@ -513,7 +514,7 @@ const HomeScreen: React.FunctionComponent<HomeScreenProps> = ({ navigation }) =>
               <View style={styles.adviceContent}>
                 <Text style={[styles.adviceText, { color: themeAsAny.colors.text }]}>
                   Bugün {user.stepsGoal || 10000} adım hedefine yakınsın!{' '}
-                  {(user.stepsGoal || 10000) - (user.steps || 0)} adım daha at ve günlük hedefe ulaş.
+                  {Math.max(0, (user.stepsGoal || 10000) - (user.steps || 0))} adım daha at ve günlük hedefe ulaş.
                 </Text>
               </View>
             </View>
@@ -528,7 +529,8 @@ const HomeScreen: React.FunctionComponent<HomeScreenProps> = ({ navigation }) =>
               </View>
               <View style={styles.adviceContent}>
                 <Text style={[styles.adviceText, { color: themeAsAny.colors.text }]}>
-                  Akşam yemeğinde protein açısından zengin gıdalar tüketmeyi düşünebilirsin.
+                  Günlük su hedefinizin {Math.floor(waterProgress)}%'ini tamamladınız. 
+                  Gün boyunca düzenli olarak su içmeyi unutmayın.
                 </Text>
               </View>
             </View>
@@ -572,7 +574,7 @@ const HomeScreen: React.FunctionComponent<HomeScreenProps> = ({ navigation }) =>
               }}>
                 <FontAwesomeIcon icon={faCalendarCheck} size={24} color={primaryColor} />
               </View>
-              <Text style={[styles.cardTitle, { color: themeAsAny.colors.text }]}>Günlük Program</Text>
+              <Text style={[styles.cardTitle, { color: themeAsAny.colors.onSurface }]}>Günlük Program</Text>
             </View>
             
             <View style={[styles.activityItem, { 
@@ -584,8 +586,8 @@ const HomeScreen: React.FunctionComponent<HomeScreenProps> = ({ navigation }) =>
                 <Text style={[styles.activityTime, { color: '#03A9F4' }]}>09:00</Text>
               </View>
               <View style={styles.activityContentContainer}>
-                <Text style={[styles.activityName, { color: themeAsAny.colors.text }]}>Sabah Yürüyüşü</Text>
-                <Text style={[styles.activityDuration, { color: themeAsAny.colors.textSecondary || '#666' }]}>30 dakika</Text>
+                <Text style={[styles.activityName, { color: themeAsAny.colors.onSurface }]}>Sabah Yürüyüşü</Text>
+                <Text style={[styles.activityDuration, { color: themeAsAny.colors.onSurfaceVariant }]}>30 dakika</Text>
               </View>
             </View>
 
@@ -720,7 +722,7 @@ const HomeScreen: React.FunctionComponent<HomeScreenProps> = ({ navigation }) =>
           calories={user.calories || 0}
           caloriesGoal={user.caloriesGoal || 2500}
           primaryColor={primaryColor}
-          onPress={() => navigateToTracker('CalorieTracker')}
+          onPress={() => navigateToTracker('FoodTracker')}
         />
       </ScrollView>
     </SafeAreaView>

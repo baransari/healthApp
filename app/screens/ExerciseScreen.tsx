@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   StyleSheet, 
@@ -69,6 +69,21 @@ type ExerciseScreenNavigationProp = NativeStackNavigationProp<RootStackParamList
 
 interface ExerciseScreenProps {
   navigation: ExerciseScreenNavigationProp;
+}
+
+// Extended Redux Exercise type for internal type checking
+interface StoreExerciseType {
+  id: string;
+  name: string;
+  category: string;
+  caloriesPerMinute?: number;
+  description?: string;
+  difficulty?: string;
+  estimatedDuration?: number;
+  imageUrl?: string;
+  muscleGroups?: string[];
+  equipment?: string[];
+  caloriesBurnedPerMinute?: number;
 }
 
 // Ekrandaki gösterim için yerel Exercise tipi
@@ -167,109 +182,132 @@ const ExerciseScreen: React.FC<ExerciseScreenProps> = ({ navigation }) => {
     getExercisesByCategory,
   } = useExerciseTracker();
 
-  // Örnek egzersiz verileri
-  const exerciseLibrary: Exercise[] = [
-    {
-      id: '1',
-      name: 'Tempolu Yürüyüş',
-      category: 'kardiyo',
-      duration: 30,
-      caloriesBurned: 180,
-      difficulty: 'kolay',
-      description:
-        'Orta tempoda yürüyüş yaparak kalp sağlığınızı koruyun ve kalori yakın. Bu egzersiz kalp sağlığınızı ve dayanıklılığınızı geliştirir.',
-    },
-    {
-      id: '2',
-      name: 'Vücut Ağırlığıyla Squat',
-      category: 'kuvvet',
-      duration: 15,
-      caloriesBurned: 120,
-      difficulty: 'orta',
-      description:
-        'Bacak kaslarınızı güçlendirin. Ayaklar omuz genişliğinde açık, dizleri bükerek oturur pozisyona gelin ve kalkın.',
-    },
-    {
-      id: '3',
-      name: 'Yoga - Güneş Selamlaması',
-      category: 'esneklik',
-      duration: 20,
-      caloriesBurned: 100,
-      difficulty: 'orta',
-      description:
-        'Klasik yoga hareketleri serisi ile esneyin ve zihinsel gevşeme sağlayın. Sabah rutini için idealdir.',
-    },
-    {
-      id: '4',
-      name: 'HIIT Antrenmanı',
-      category: 'kardiyo',
-      duration: 25,
-      caloriesBurned: 300,
-      difficulty: 'zor',
-      description:
-        'Yüksek yoğunluklu interval antrenmanı ile kısa sürede maksimum kalori yakın. 30 saniye yoğun egzersiz, 10 saniye dinlenme şeklinde ilerler.',
-    },
-    {
-      id: '5',
-      name: 'Plank',
-      category: 'kuvvet',
-      duration: 10,
-      caloriesBurned: 80,
-      difficulty: 'orta',
-      description:
-        'Göbek ve sırt kaslarınızı güçlendirin. Dirsekler ve ayak parmakları üzerinde düz bir çizgi oluşturun ve pozisyonu koruyun.',
-    },
-    {
-      id: '6',
-      name: 'Bisiklet',
-      category: 'kardiyo',
-      duration: 40,
-      caloriesBurned: 280,
-      difficulty: 'orta',
-      description:
-        'Açık havada veya sabit bisikletle yapılan aerobik egzersiz. Bacak kaslarını güçlendirir ve kalp sağlığını destekler.',
-    },
-    {
-      id: '7',
-      name: 'Push-Up (Şınav)',
-      category: 'kuvvet',
-      duration: 15,
-      caloriesBurned: 140,
-      difficulty: 'orta',
-      description:
-        'Üst vücut kuvvetini artıran temel egzersiz. Göğüs, omuz ve kol kaslarını çalıştırır. Yeni başlayanlar için dizler yerde yapılabilir.',
-    },
-    {
-      id: '8',
-      name: 'Pilates - Temel Hareketler',
-      category: 'esneklik',
-      duration: 25,
-      caloriesBurned: 120,
-      difficulty: 'orta',
-      description:
-        'Vücut duruşunu düzeltmeye, esnekliği artırmaya ve çekirdek kasları güçlendirmeye odaklanan bir egzersiz sistemi.',
-    },
-    {
-      id: '9',
-      name: 'Koşu',
-      category: 'kardiyo',
-      duration: 30,
-      caloriesBurned: 320,
-      difficulty: 'zor',
-      description:
-        'Dayanıklılık ve kalp sağlığı için ideal egzersiz. Tempolu koşu yaparak kardiyo kapasitenizi artırın ve stres atın.',
-    },
-    {
-      id: '10',
-      name: 'Burpees',
-      category: 'kuvvet',
-      duration: 10,
-      caloriesBurned: 150,
-      difficulty: 'zor',
-      description:
-        'Tam vücut egzersizi olan burpees, hem kardiyo hem de kuvvet çalışması sağlar. Squat, plank, şınav ve zıplama hareketlerini içerir.',
-    },
-  ];
+  // Kütüphanedeki egzersizler - API'den veya Redux'tan gelecek
+  const [exerciseLibrary, setExerciseLibrary] = useState<Exercise[]>([]);
+  
+  // Egzersiz kütüphanesini yükle - gerçek senaryoda bir API çağrısı yapılacak
+  useEffect(() => {
+    const loadExercises = async () => {
+      try {
+        // Zaten Redux store'da varsa, onları kullan
+        if (storeExercises && storeExercises.length > 0) {
+          setExerciseLibrary(storeExercises.map((exercise: StoreExerciseType) => ({
+            id: exercise.id,
+            name: exercise.name,
+            category: exercise.category as 'kardiyo' | 'kuvvet' | 'esneklik' | 'denge',
+            duration: exercise.estimatedDuration || 20,
+            caloriesBurned: exercise.caloriesBurnedPerMinute ? 
+              exercise.caloriesBurnedPerMinute * (exercise.estimatedDuration || 20) : 
+              (exercise.caloriesPerMinute || 5) * (exercise.estimatedDuration || 20),
+            difficulty: (exercise.difficulty || 'orta') as 'kolay' | 'orta' | 'zor',
+            description: exercise.description || '',
+            imageUrl: exercise.imageUrl,
+          })));
+          return;
+        }
+        
+        // Yoksa, örnek verileri oluştur
+        const sampleExercises: Exercise[] = [
+          {
+            id: '1',
+            name: 'Tempolu Yürüyüş',
+            category: 'kardiyo',
+            duration: 30,
+            caloriesBurned: 180,
+            difficulty: 'kolay',
+            description:
+              'Orta tempoda yürüyüş yaparak kalp sağlığınızı koruyun ve kalori yakın. Bu egzersiz kalp sağlığınızı ve dayanıklılığınızı geliştirir.',
+          },
+          {
+            id: '2',
+            name: 'Vücut Ağırlığıyla Squat',
+            category: 'kuvvet',
+            duration: 15,
+            caloriesBurned: 120,
+            difficulty: 'orta',
+            description:
+              'Bacak kaslarınızı güçlendirin. Ayaklar omuz genişliğinde açık, dizleri bükerek oturur pozisyona gelin ve kalkın.',
+          },
+          {
+            id: '3',
+            name: 'Yoga - Güneş Selamlaması',
+            category: 'esneklik',
+            duration: 20,
+            caloriesBurned: 100,
+            difficulty: 'orta',
+            description:
+              'Klasik yoga hareketleri serisi ile esneyin ve zihinsel gevşeme sağlayın. Sabah rutini için idealdir.',
+          },
+          {
+            id: '4',
+            name: 'HIIT Antrenmanı',
+            category: 'kardiyo',
+            duration: 25,
+            caloriesBurned: 300,
+            difficulty: 'zor',
+            description:
+              'Yüksek yoğunluklu interval antrenmanı ile kısa sürede maksimum kalori yakın. 30 saniye yoğun egzersiz, 10 saniye dinlenme şeklinde ilerler.',
+          },
+          {
+            id: '5',
+            name: 'Plank',
+            category: 'kuvvet',
+            duration: 10,
+            caloriesBurned: 80,
+            difficulty: 'orta',
+            description:
+              'Göbek ve sırt kaslarınızı güçlendirin. Dirsekler ve ayak parmakları üzerinde düz bir çizgi oluşturun ve pozisyonu koruyun.',
+          },
+          {
+            id: '6',
+            name: 'Bisiklet',
+            category: 'kardiyo',
+            duration: 40,
+            caloriesBurned: 280,
+            difficulty: 'orta',
+            description:
+              'Açık havada veya sabit bisikletle yapılan aerobik egzersiz. Bacak kaslarını güçlendirir ve kalp sağlığını destekler.',
+          },
+          {
+            id: '7',
+            name: 'Push-Up (Şınav)',
+            category: 'kuvvet',
+            duration: 15,
+            caloriesBurned: 140,
+            difficulty: 'orta',
+            description:
+              'Üst vücut kuvvetini artıran temel egzersiz. Göğüs, omuz ve kol kaslarını çalıştırır. Yeni başlayanlar için dizler yerde yapılabilir.',
+          },
+          {
+            id: '8',
+            name: 'Pilates - Temel Hareketler',
+            category: 'esneklik',
+            duration: 25,
+            caloriesBurned: 120,
+            difficulty: 'orta',
+            description:
+              'Kor kaslarınızı güçlendiren kontrollü hareketler serisi. Vücut duruşunu iyileştirir ve esnekliği artırır.',
+          },
+        ];
+
+        // Örnek egzersizleri store'a ekle
+        sampleExercises.forEach(exercise => {
+          createExercise({
+            name: exercise.name,
+            category: exercise.category,
+            caloriesBurnedPerMinute: Math.round(exercise.caloriesBurned / exercise.duration),
+            description: exercise.description
+          });
+        });
+        
+        setExerciseLibrary(sampleExercises);
+      } catch (error) {
+        console.error('Egzersiz verileri yüklenirken hata:', error);
+      }
+    };
+    
+    loadExercises();
+  }, [storeExercises, createExercise]);
 
   // Format WorkoutPlans data properly
   const formatWorkoutPlans = (plans: WorkoutPlan[]): any[] => {
@@ -782,7 +820,8 @@ const ExerciseScreen: React.FC<ExerciseScreenProps> = ({ navigation }) => {
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.25,
                 shadowRadius: 8,
-                elevation: 5
+                elevation: 5,
+                width: 150
               }]} 
               onPress={() => startWorkout(plan)}
             >
@@ -801,7 +840,8 @@ const ExerciseScreen: React.FC<ExerciseScreenProps> = ({ navigation }) => {
                 styles.editButtonContainer, 
                 { 
                   borderColor: theme.colors.primary,
-                  backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)'
+                  backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+                  width: 150
                 }
               ]}
               onPress={() => openEditPlanModal(plan)}
@@ -821,25 +861,28 @@ const ExerciseScreen: React.FC<ExerciseScreenProps> = ({ navigation }) => {
       ))}
 
       <TouchableOpacity 
-        style={[styles.addButton, { 
-          backgroundColor: theme.colors.primary,
-          shadowColor: theme.colors.primary,
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.25,
-          shadowRadius: 8,
-          elevation: 5,
-          marginHorizontal: 16
-        }]} 
+        style={[
+          styles.editButtonContainer, 
+          { 
+            backgroundColor: theme.colors.primary,
+            borderColor: theme.colors.primary,
+            marginHorizontal: 16,
+            marginTop: 10,
+            marginBottom: 16,
+            width: 220,
+            alignSelf: 'center'
+          }
+        ]} 
         onPress={createNewPlan}
       >
         <FontAwesomeIcon 
           icon={faPlus} 
           size={20} 
           color={theme.colors.onPrimary} 
-          style={styles.buttonIcon} 
+          style={styles.buttonIcon}
         />
-        <Text style={[styles.startButtonText, { color: theme.colors.onPrimary }]}>
-          YENİ PROGRAM OLUŞTUR
+        <Text style={[styles.editButtonText, { color: theme.colors.onPrimary }]}>
+          PROGRAM EKLE
         </Text>
       </TouchableOpacity>
     </>
@@ -1491,7 +1534,7 @@ const styles = StyleSheet.create({
     textTransform: 'capitalize',
   },
   cardActions: {
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     paddingVertical: 12,
     paddingHorizontal: 16,
   },
@@ -1503,7 +1546,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    flex: 1,
+    flex: 0,
     marginRight: 12,
     shadowColor: '#4285F4',
     shadowOffset: { width: 0, height: 4 },
@@ -1514,9 +1557,7 @@ const styles = StyleSheet.create({
   startButtonText: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#FFFFFF',
     textAlign: 'center',
-    marginLeft: 8,
   },
   editButtonContainer: {
     borderColor: '#4285F4',
@@ -1535,6 +1576,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginLeft: 8,
   },
+  buttonIcon: {
+    marginRight: 8,
+  },
   addButton: {
     backgroundColor: '#4285F4',
     borderRadius: 24,
@@ -1549,9 +1593,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 5,
-  },
-  buttonIcon: {
-    marginRight: 8,
   },
   workoutHistoryContainer: {
     flex: 1,

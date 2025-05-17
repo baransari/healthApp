@@ -5,21 +5,46 @@
  * Bileşenler, kullanım alanlarına göre gruplandırılmıştır.
  */
 
-// ------------------------------
-// Genel UI bileşenleri
-// ------------------------------
-export { default as LoadingComponent } from './LoadingComponent';
+/**
+ * Uygulama genelinde kullanılan bileşenleri dışa aktarır
+ */
 
-// ------------------------------
-// Modal bileşenleri
-// ------------------------------
-export { default as AddExerciseModal } from './AddExerciseModal';
-export { default as EditWorkoutPlanModal } from './EditWorkoutPlanModal';
+import LoadingComponent from './LoadingComponent';
+import AddExerciseModal from './AddExerciseModal';
+import EditWorkoutPlanModal from './EditWorkoutPlanModal';
+import AutoUpdaterComponent from './AutoUpdaterComponent';
 
-// ------------------------------
-// Uygulama altyapı bileşenleri
-// ------------------------------
-export { default as AutoUpdaterComponent } from './AutoUpdaterComponent';
+// Tema uyumlu bileşenlerimiz - koyu mod desteği ile
+import * as CustomComponents from '../utils/paperComponentsNew';
+
+// Ana bileşenlerimizi dışa aktar
+export {
+  LoadingComponent,
+  AddExerciseModal,
+  EditWorkoutPlanModal,
+  AutoUpdaterComponent,
+};
+
+// Custom tema uyumlu bileşenleri dışa aktar
+export const {
+  Text,
+  Button,
+  Card,
+  Surface,
+  Divider,
+  Switch,
+  TextInput,
+  RadioButton,
+  HelperText,
+} = CustomComponents;
+
+export default {
+  LoadingComponent,
+  AddExerciseModal,
+  EditWorkoutPlanModal,
+  AutoUpdaterComponent,
+  ...CustomComponents,
+};
 
 /**
  * Not: Yeni bir bileşen eklerken, lütfen uygun kategoriye ekleyin veya
