@@ -10,6 +10,7 @@ import {
   Alert,
   SafeAreaView,
   Image,
+  Switch,
 } from 'react-native';
 import {
   Card,
@@ -51,10 +52,14 @@ import {
   faHandSparkles,
   faHourglass,
   faCalendarAlt,
+  faCog,
+  faMagic,
+  faRobot,
 } from '@fortawesome/free-solid-svg-icons';
 import StorageService from '../services/StorageService';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTheme } from '../hooks/useTheme';
+import useSleepDetector from '../hooks/useSleepDetector';
 
 interface SleepTrackerScreenProps {
   navigation: any;
@@ -70,6 +75,7 @@ const SleepTrackerScreen: React.FC<SleepTrackerScreenProps> = ({ navigation }) =
   const themeAsAny = theme as any;
   
   const [modalVisible, setModalVisible] = useState(false);
+  const [settingsModalVisible, setSettingsModalVisible] = useState(false);
   const [newSleepEntry, setNewSleepEntry] = useState<Partial<SleepEntry>>({
     date: new Date().toISOString().split('T')[0],
     startTime: '23:00',
@@ -80,6 +86,9 @@ const SleepTrackerScreen: React.FC<SleepTrackerScreenProps> = ({ navigation }) =
 
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
+  
+  // Uyku algılama hook'unu kullan
+  const { isEnabled, isDetecting, toggleSleepDetection, detectSleepManually } = useSleepDetector();
 
   // Ekran her odaklandığında verileri yenile
   useFocusEffect(
@@ -299,6 +308,16 @@ const SleepTrackerScreen: React.FC<SleepTrackerScreenProps> = ({ navigation }) =
     }
   };
 
+  // Uyku sensörü durumunu açıklayan metin
+  const getSleepDetectionStatusText = () => {
+    if (isEnabled) {
+      return isDetecting 
+        ? "Uyku algılama aktif: Uyku takip ediliyor" 
+        : "Uyku algılama aktif: Uyku bekleniyor";
+    }
+    return "Uyku algılama devre dışı";
+  };
+
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.colors.background }]}>
       {/* Header Section - Modern and vibrant design */}
@@ -315,27 +334,45 @@ const SleepTrackerScreen: React.FC<SleepTrackerScreenProps> = ({ navigation }) =
               {getFormattedDate()}
             </Text>
           </View>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => setSettingsModalVisible(true)}>
             <View style={styles.avatarContainer}>
-              <FontAwesomeIcon icon={faBed} size={24} color="#fff" />
+              <FontAwesomeIcon icon={faCog} size={24} color="#fff" />
             </View>
           </TouchableOpacity>
         </View>
 
-        {/* Sleep Goal Chip */}
-        <Chip
-          icon={({ size, color }: { size: number; color: string }) => (
-            <FontAwesomeIcon icon={faMoon} size={size} color="#8A2BE2" />
+        {/* Sleep Goal Chip and Detection Status */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 }}>
+          <Chip
+            icon={({ size, color }: { size: number; color: string }) => (
+              <FontAwesomeIcon icon={faMoon} size={size} color="#8A2BE2" />
+            )}
+            style={[styles.goalChip, { 
+              backgroundColor: 'rgba(255, 255, 255, 0.25)',
+              borderWidth: 1,
+              borderColor: 'rgba(255, 255, 255, 0.5)'
+            }]}
+            textStyle={[styles.goalChipText, { color: '#fff' }]}
+          >
+            Hedef: {sleepGoal || 8} saat uyku
+          </Chip>
+          
+          {isEnabled && (
+            <Chip
+              icon={({ size, color }: { size: number; color: string }) => (
+                <FontAwesomeIcon icon={faRobot} size={size} color={isDetecting ? "#4CAF50" : "#FF9800"} />
+              )}
+              style={[styles.goalChip, { 
+                backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                borderWidth: 1,
+                borderColor: 'rgba(255, 255, 255, 0.5)'
+              }]}
+              textStyle={[styles.goalChipText, { color: '#fff' }]}
+            >
+              {isDetecting ? "Takip ediliyor" : "Aktif"}
+            </Chip>
           )}
-          style={[styles.goalChip, { 
-            backgroundColor: 'rgba(255, 255, 255, 0.25)',
-            borderWidth: 1,
-            borderColor: 'rgba(255, 255, 255, 0.5)'
-          }]}
-          textStyle={[styles.goalChipText, { color: '#fff' }]}
-        >
-          Hedef: {sleepGoal || 8} saat uyku
-        </Chip>
+        </View>
       </View>
 
       <ScrollView 
@@ -717,6 +754,78 @@ const SleepTrackerScreen: React.FC<SleepTrackerScreenProps> = ({ navigation }) =
           </View>
         )}
 
+        {/* Uyku Algılama Kartı - yeni eklenen */}
+        <Card style={[styles.card, { 
+          backgroundColor: isDarkMode ? '#1E1E2E' : theme.colors.surface,
+          borderRadius: 24,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.1,
+          shadowRadius: 12,
+          elevation: 8,
+          margin: 16,
+          marginTop: 8
+        }]}>
+          <Card.Content style={styles.cardContent}>
+            <View style={styles.sectionTitleContainer}>
+              <View style={{
+                backgroundColor: `${theme.colors.primary}20`,
+                width: 50, 
+                height: 50, 
+                borderRadius: 25,
+                justifyContent: 'center',
+                alignItems: 'center',
+                shadowColor: theme.colors.primary,
+                shadowOffset: { width: 0, height: 3 },
+                shadowOpacity: 0.2,
+                shadowRadius: 4,
+                elevation: 3
+              }}>
+                <FontAwesomeIcon icon={faMagic} size={24} color={theme.colors.primary} />
+              </View>
+              <Text style={[styles.cardTitle, { color: theme.colors.onSurface }]}>Otomatik Uyku Tespiti</Text>
+            </View>
+            
+            <View style={[styles.sleepDetectorContainer, { 
+              backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+              borderRadius: 16,
+              padding: 16,
+              marginTop: 8
+            }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.sleepDetectorTitle, { color: theme.colors.onSurface, fontWeight: 'bold', marginBottom: 6 }]}>
+                    {isEnabled ? "Otomatik Tespit Aktif" : "Otomatik Tespit Kapalı"}
+                  </Text>
+                  <Text style={{ color: theme.colors.onSurfaceVariant, fontSize: 14 }}>
+                    {isEnabled 
+                      ? "Telefonunuzu kullanmadığınız zamanlar otomatik olarak uyku olarak kaydedilecek." 
+                      : "Uyku verilerinizi manuel olarak eklemeniz gerekiyor."}
+                  </Text>
+                </View>
+                <Switch
+                  value={isEnabled}
+                  onValueChange={(value) => {
+                    toggleSleepDetection(value);
+                  }}
+                  trackColor={{ false: '#767577', true: `${theme.colors.primary}80` }}
+                  thumbColor={isEnabled ? theme.colors.primary : '#f4f3f4'}
+                />
+              </View>
+              
+              {isEnabled && (
+                <View style={{ marginTop: 12, padding: 8, backgroundColor: isDetecting ? 'rgba(76, 175, 80, 0.1)' : 'rgba(255, 152, 0, 0.1)', borderRadius: 8 }}>
+                  <Text style={{ color: isDetecting ? '#4CAF50' : '#FF9800', textAlign: 'center' }}>
+                    {isDetecting 
+                      ? "Şu anda uyku tespiti yapılıyor. Telefonu kullanmaya başladığınızda uyku süreniz kaydedilecek." 
+                      : "Sistem aktif. Telefonu uzun süre kullanmadığınızda uyku tespiti başlayacak."}
+                  </Text>
+                </View>
+              )}
+            </View>
+          </Card.Content>
+        </Card>
+
         <Button
           mode="contained"
           icon={({ size, color }: { size: number; color: string }) => (
@@ -885,6 +994,90 @@ const SleepTrackerScreen: React.FC<SleepTrackerScreenProps> = ({ navigation }) =
                 <Text style={{ color: 'white', fontWeight: 'bold', textAlign: 'center' }}>Kaydet</Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Ayarlar Modalı */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={settingsModalVisible}
+        onRequestClose={() => setSettingsModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={[styles.modalContent, { 
+            backgroundColor: isDarkMode ? '#1E1E2E' : theme.colors.surface,
+            borderRadius: 24,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 10 },
+            shadowOpacity: 0.2,
+            shadowRadius: 20,
+            elevation: 12
+          }]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: theme.colors.onSurface }]}>Uyku Takibi Ayarları</Text>
+              <TouchableOpacity onPress={() => setSettingsModalVisible(false)}>
+                <FontAwesomeIcon icon={faClose} size={24} color={theme.colors.onSurface} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={[styles.label, { color: theme.colors.onSurface }]}>Günlük Uyku Hedefi</Text>
+              <View style={styles.settingsRow}>
+                <TouchableOpacity
+                  style={[styles.settingsButton, { backgroundColor: theme.colors.primary }]}
+                  onPress={() => {
+                    const newGoal = Math.max(4, sleepGoal - 0.5);
+                    dispatch(setSleepGoal(newGoal));
+                  }}
+                >
+                  <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold' }}>-</Text>
+                </TouchableOpacity>
+                <Text style={[styles.settingsValue, { color: theme.colors.onSurface }]}>
+                  {sleepGoal} saat
+                </Text>
+                <TouchableOpacity
+                  style={[styles.settingsButton, { backgroundColor: theme.colors.primary }]}
+                  onPress={() => {
+                    const newGoal = Math.min(12, sleepGoal + 0.5);
+                    dispatch(setSleepGoal(newGoal));
+                  }}
+                >
+                  <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold' }}>+</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={[styles.label, { color: theme.colors.onSurface }]}>Otomatik Uyku Tespiti</Text>
+              <View style={[styles.settingsSwitchRow, { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)', padding: 16, borderRadius: 12 }]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: theme.colors.onSurface, fontWeight: 'bold', marginBottom: 4 }}>
+                    {isEnabled ? "Etkin" : "Devre Dışı"}
+                  </Text>
+                  <Text style={{ color: theme.colors.onSurfaceVariant, fontSize: 14 }}>
+                    Telefonunuzun kullanılmadığı zamanları uyku olarak tespit eder
+                  </Text>
+                </View>
+                <Switch
+                  value={isEnabled}
+                  onValueChange={(value) => {
+                    toggleSleepDetection(value);
+                  }}
+                  trackColor={{ false: '#767577', true: `${theme.colors.primary}80` }}
+                  thumbColor={isEnabled ? theme.colors.primary : '#f4f3f4'}
+                />
+              </View>
+            </View>
+
+            <Button
+              mode="contained"
+              style={{ backgroundColor: theme.colors.primary, marginTop: 16, borderRadius: 12 }}
+              onPress={() => setSettingsModalVisible(false)}
+            >
+              Tamam
+            </Button>
           </View>
         </View>
       </Modal>
@@ -1253,6 +1446,38 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontStyle: 'italic',
     marginVertical: 20,
+  },
+  settingsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  settingsSwitchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 8,
+    borderRadius: 8,
+  },
+  settingsButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  settingsValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  sleepDetectorContainer: {
+    marginVertical: 8,
+  },
+  sleepDetectorTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 6,
   },
 });
 

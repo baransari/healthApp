@@ -1,10 +1,44 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Platform } from 'react-native';
+import { Platform, NativeModules } from 'react-native';
 // Redux imports - doğrudan store ve dispatch kullanımına geçiyoruz
 import store from '../store';
 import { AnyAction } from 'redux';
 import { setDailySteps, updateStepGoal, setIsStepAvailable } from '../store/stepTrackerSlice';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// Sensör paketleri için koşullu importlar - simülatörde hata vermemesi için
+let RNPedometer: any = null;
+let accelerometer: any = null;
+let setUpdateIntervalForType: any = null;
+let SensorTypes: any = null;
+
+// Simülatörde olup olmadığımızı tespit etmek için 
+// iOS için simülatör tespiti
+const isIosSimulator = Platform.OS === 'ios' && NativeModules.RNDeviceInfo?.isEmulator;
+// Android için emülatör tespiti
+const isAndroidEmulator = Platform.OS === 'android' && NativeModules.RNDeviceInfo?.isEmulator;
+// isEmulator değişkeni oluştur
+const isEmulator = isIosSimulator || isAndroidEmulator;
+
+// Sadece gerçek cihazda modülleri yükle
+if (!isEmulator && Platform.OS === 'ios') {
+  try {
+    RNPedometer = require('react-native-pedometer');
+  } catch (e) {
+    console.log('Pedometer modülü yüklenemedi', e);
+  }
+}
+
+if (!isEmulator) {
+  try {
+    const RNSensors = require('react-native-sensors');
+    accelerometer = RNSensors.accelerometer;
+    setUpdateIntervalForType = RNSensors.setUpdateIntervalForType;
+    SensorTypes = RNSensors.SensorTypes;
+  } catch (e) {
+    console.log('Sensors modülü yüklenemedi', e);
+  }
+}
 
 // Storage keys
 const STORAGE_KEYS = {
@@ -70,63 +104,127 @@ interface Pedometer {
   watchStepCount: (callback: (result: PedometerResult) => void) => Subscription;
 }
 
-// Fix RNPedometer linter error by adding type
-interface RNPedometerType {
-  getStepCountForPeriod: (start: Date, end: Date) => Promise<PedometerResult>;
-  startPedometerUpdatesFromDate: (date: Date) => void;
-  stopPedometerUpdates: () => void;
-  addListener: (event: string, callback: (data: any) => void) => { remove: () => void };
-}
-
-// Safely import Pedometer module
-let Pedometer: Pedometer | null = null;
-
-// Try to import the pedometer module safely
-const loadPedometer = () => {
-  try {
-    // For React Native CLI projects, we should use a direct import if available
-    if (Platform.OS === 'ios' || Platform.OS === 'android') {
-      // Since we don't have any pedometer modules installed, we'll use simulation mode
-      console.log('No pedometer modules detected in package.json, using simulation mode');
-      return null;
-    }
-    
-    console.log('No pedometer implementation available, using simulation mode');
-    return null;
-  } catch (error: any) {
-    console.warn('Failed to import any Pedometer implementation:', error.message);
-    console.log('Using step simulation mode');
+// Pedometer için platform özel implementasyon
+const createPedometerImplementation = (): Pedometer | null => {
+  // Simülatörde çalışıyorsak, doğrudan null döndür
+  if (isEmulator) {
+    console.log('Simülatörde çalışılıyor, adım sensörü simülasyonu kullanılacak');
     return null;
   }
-};
 
-// Helper to create RNPedometer adapter for iOS
-function createRNPedometerAdapter(RNPedometer: any): Pedometer {
-  if (!RNPedometer) {
-    console.error('Cannot create adapter for null RNPedometer');
-    return null as unknown as Pedometer;
+  // iOS için
+  if (Platform.OS === 'ios' && RNPedometer) {
+    return {
+      isAvailableAsync: async (): Promise<boolean> => {
+        try {
+          return await RNPedometer.isStepCountingAvailable();
+        } catch (error) {
+          console.error('Error checking pedometer availability:', error);
+          return false;
+        }
+      },
+      getStepCountAsync: async (start: Date, end: Date): Promise<PedometerResult> => {
+        try {
+          const result = await RNPedometer.startPedometerUpdatesFromDate(start);
+          return { steps: result?.numberOfSteps || 0 };
+        } catch (error) {
+          console.error('Error getting step count:', error);
+          return { steps: 0 };
+        }
+      },
+      watchStepCount: (callback: (result: PedometerResult) => void): Subscription => {
+        try {
+          RNPedometer.startPedometerUpdatesFromDate(new Date());
+          // Define an interface for pedometer data
+          interface PedometerData {
+            numberOfSteps: number;
+            [key: string]: any;
+          }
+          const subscription = RNPedometer.addListener('pedometerDataDidUpdate', (data: PedometerData) => {
+            callback({ steps: data.numberOfSteps });
+          });
+          
+          return {
+            remove: () => {
+              subscription.remove();
+              RNPedometer.stopPedometerUpdates();
+            }
+          };
+        } catch (error) {
+          console.error('Error watching step count:', error);
+          return { remove: () => {} };
+        }
+      }
+    };
   }
   
-  console.log('Creating RNPedometer adapter');
-  return {
-    isAvailableAsync: () => Promise.resolve(true), // Assuming availability for now
-    getStepCountAsync: (start: Date, end: Date) => {
-      return RNPedometer.getStepCountForPeriod(start, end);
-    },
-    watchStepCount: (callback: (result: PedometerResult) => void) => {
-      RNPedometer.startPedometerUpdatesFromDate(new Date());
-      const subscription = RNPedometer.addListener('pedometerDataDidUpdate', (data: any) => {
-        callback({ steps: data.numberOfSteps });
-      });
-      return {
-        remove: () => {
-          subscription.remove();
-          RNPedometer.stopPedometerUpdates();
+  // Android için (Android'de accelerometer sensörünü kullanarak adım sayısını tahmin ediyoruz)
+  if (Platform.OS === 'android' && accelerometer) {
+    // Android'de sensor datası için yüksek güncelleme hızı ayarlıyoruz
+    setUpdateIntervalForType(SensorTypes.accelerometer, 100);
+    
+    // Adım algılama için basit bir algoritma
+    let stepCount = 0;
+    let lastMagnitude = 0;
+    let lastUpdate = 0;
+    const threshold = 10; // Adım olarak sayılacak ivme değişimi eşiği
+    
+    return {
+      isAvailableAsync: async (): Promise<boolean> => {
+        try {
+          // Accelerometer varsa, true döndür
+          return true;
+        } catch (error) {
+          console.error('Error checking accelerometer availability:', error);
+          return false;
         }
-      };
-    }
-  };
-}
+      },
+      getStepCountAsync: async (): Promise<PedometerResult> => {
+        // Güncel adım sayısını döndür
+        return { steps: stepCount };
+      },
+      watchStepCount: (callback: (result: PedometerResult) => void): Subscription => {
+        // Accelerometer aboneliği
+        interface SensorData {
+          x: number;
+          y: number;
+          z: number;
+          timestamp: number;
+        }
+        const subscription = accelerometer.subscribe(({ x, y, z, timestamp }: SensorData) => {
+          // İvme vektörünün büyüklüğünü hesapla
+          const magnitude = Math.sqrt(x * x + y * y + z * z);
+          const now = Date.now();
+          
+          // Son güncellemenin üzerinden belli bir süre geçmişse
+          if (now - lastUpdate > 100) {
+            // Büyüklük farkını hesapla
+            const delta = Math.abs(magnitude - lastMagnitude);
+            
+            // Eşiği geçerse adım sayısını artır
+            if (delta > threshold) {
+              stepCount++;
+              callback({ steps: stepCount });
+            }
+            
+            lastMagnitude = magnitude;
+            lastUpdate = now;
+          }
+        });
+        
+        return {
+          remove: () => {
+            subscription.unsubscribe();
+          }
+        };
+      }
+    };
+  }
+  
+  // Eğer desteklenen bir platform değilse veya sensörler mevcut değilse simülatörü kullan
+  console.log('No pedometer implementation available, using simulation mode');
+  return null;
+};
 
 // Step simulator for devices without pedometer
 class StepSimulator {
@@ -213,7 +311,12 @@ export default function useStepTracker() {
     const initialize = async () => {
       try {
         console.log("Initializing step tracker...");
-        
+         
+        // Reset step goal to default 10000
+        await AsyncStorage.setItem(STORAGE_KEYS.STEP_GOAL, DEFAULT_STEP_GOAL.toString());
+        safeDispatch(updateStepGoal(DEFAULT_STEP_GOAL));
+        setLocalStepGoal(DEFAULT_STEP_GOAL);
+          
         // Step 1: Get initial data from Redux (once, at startup)
         try {
           const stepState = safeStore.getStepTrackerState();
@@ -226,9 +329,8 @@ export default function useStepTracker() {
           console.error("Error getting initial Redux state:", stateError);
         }
 
-        // Step 2: Try to load pedometer module - simplified version
-        // We'll immediately use simulation mode since we don't have pedometer packages
-        console.log('Using step simulation mode by default');
+        // Step 2: Try to load pedometer implementation
+        const pedometer = createPedometerImplementation();
         
         // Step 3: Try to load data from AsyncStorage
         try {
@@ -244,27 +346,55 @@ export default function useStepTracker() {
           console.error('Error loading step goal from AsyncStorage:', error);
         }
 
-        // We're always using simulation mode for now
-        const stepAvailable = false;
+        // Step 4: Check if pedometer is available on this device
+        let stepAvailable = false;
         
-        // Update state with availability result - handle possible Redux errors
         try {
-          safeDispatch(setIsStepAvailable(stepAvailable));
-        } catch (dispatchError) {
-          console.error('Error dispatching step availability:', dispatchError);
+          if (pedometer) {
+            stepAvailable = await pedometer.isAvailableAsync();
+            console.log('Pedometer availability:', stepAvailable);
+            
+            if (stepAvailable) {
+              // Start tracking steps with real pedometer
+              const startOfDay = getStartAndEndTime().start;
+              
+              // Get initial steps from start of day
+              try {
+                const initialSteps = await pedometer.getStepCountAsync(startOfDay, new Date());
+                safeDispatch(setDailySteps(initialSteps.steps));
+                setLocalDailySteps(initialSteps.steps);
+              } catch (stepsError) {
+                console.error('Error getting initial steps:', stepsError);
+              }
+              
+              // Subscribe to live updates
+              const subscription = pedometer.watchStepCount((result) => {
+                safeDispatch(setDailySteps(result.steps));
+                setLocalDailySteps(result.steps);
+              });
+              
+              // Cleanup when component unmounts
+              return () => {
+                subscription.remove();
+              };
+            }
+          }
+        } catch (error) {
+          console.error('Error checking pedometer:', error);
         }
+        
+        // Update state with availability result
+        safeDispatch(setIsStepAvailable(stepAvailable));
         setLocalStepAvailable(stepAvailable);
-
-        // Start simulator
-        console.log("Starting step simulator...");
-        stepSimulator.start();
-        const randomSteps = Math.floor(Math.random() * 2000) + 3000;
-        try {
+        
+        // If no real pedometer, use simulation
+        if (!stepAvailable) {
+          console.log("Starting step simulator...");
+          stepSimulator.start();
+          const randomSteps = Math.floor(Math.random() * 2000) + 3000;
           safeDispatch(setDailySteps(randomSteps));
-        } catch (dispatchError) {
-          console.error('Error dispatching initial steps:', dispatchError);
+          setLocalDailySteps(randomSteps);
         }
-        setLocalDailySteps(randomSteps);
 
         // Initialization complete
         setIsInitialized(true);
@@ -317,8 +447,8 @@ export default function useStepTracker() {
 
   // Update step count from simulation (if sensor is not available)
   useEffect(() => {
-    // Don't track simulated steps until initialized or if critical error
-    if (!isInitialized || criticalError) return;
+    // Don't track simulated steps until initialized or if critical error or if real pedometer available
+    if (!isInitialized || criticalError || isStepAvailable) return;
     
     // Listen for step updates from simulator
     let subscription: Subscription | null = null;
@@ -346,7 +476,7 @@ export default function useStepTracker() {
         }
       }
     };
-  }, [isInitialized, criticalError, safeDispatch]);
+  }, [isInitialized, criticalError, isStepAvailable, safeDispatch]);
 
   // Update step goal - optimized with callback
   const updateGoal = useCallback(async (newGoal: number) => {
