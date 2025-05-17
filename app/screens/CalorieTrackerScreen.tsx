@@ -49,10 +49,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 
 // Define navigation type
-type CalorieTrackerScreenNavigationProp = CompositeNavigationProp<
-  BottomTabNavigationProp<MainTabParamList, 'CalorieTracker'>,
-  NativeStackNavigationProp<RootStackParamList>
->;
+type CalorieTrackerScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'CalorieTracker'>;
 
 interface CalorieTrackerScreenProps {
   navigation: CalorieTrackerScreenNavigationProp;

@@ -100,10 +100,7 @@ import {
   faTruckFast,
 } from '@fortawesome/free-solid-svg-icons';
 
-type FoodTrackerScreenNavigationProp = CompositeNavigationProp<
-  BottomTabNavigationProp<MainTabParamList, 'FoodTracker'>,
-  NativeStackNavigationProp<RootStackParamList>
->;
+type FoodTrackerScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'FoodTracker'>;
 
 interface FoodTrackerScreenProps {
   navigation: FoodTrackerScreenNavigationProp;

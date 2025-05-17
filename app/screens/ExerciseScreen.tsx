@@ -65,10 +65,7 @@ import EditWorkoutPlanModal from '../components/EditWorkoutPlanModal';
 import { useTheme } from '../hooks/useTheme';
 
 // Define navigation type
-type ExerciseScreenNavigationProp = CompositeNavigationProp<
-  BottomTabNavigationProp<MainTabParamList, 'ExerciseTracker'>,
-  NativeStackNavigationProp<RootStackParamList>
->;
+type ExerciseScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 interface ExerciseScreenProps {
   navigation: ExerciseScreenNavigationProp;
@@ -339,19 +336,77 @@ const ExerciseScreen: React.FC<ExerciseScreenProps> = ({ navigation }) => {
   };
 
   // Use the exercise data from store or fallback to defaults
-  const workoutPlansData = storeWorkoutPlans?.length > 0
-    ? formatWorkoutPlans(storeWorkoutPlans)
-    : [
+  console.log('Store workout plans:', storeWorkoutPlans);
+
+  // Forcing the use of default data for demonstration purposes - remove this in production
+  const defaultWorkoutPlans = [
         {
           id: 'plan1',
           name: 'Başlangıç Seviyesi Fitness',
           description: 'Fitness yolculuğunuza başlamak için ideal program',
-          exercises: exerciseLibrary.slice(0, 2),
+          exercises: exerciseLibrary.slice(0, 3).map(ex => ({
+            exerciseId: ex.id,
+            recommendedDuration: ex.duration || 30,
+            recommendedSets: 3,
+            recommendedReps: 12,
+          })),
           days: ['Pazartesi', 'Çarşamba', 'Cuma'],
-          duration: 40,
+          frequency: 'Haftada 3 gün',
         },
-        // ... other default plans
+        {
+          id: 'plan2',
+          name: 'Kardiyo Odaklı Program',
+          description: 'Kalp sağlığı ve dayanıklılık için yoğun kardiyo egzersizleri',
+          exercises: exerciseLibrary.filter(ex => ex.category === 'kardiyo').slice(0, 4).map(ex => ({
+            exerciseId: ex.id,
+            recommendedDuration: ex.duration || 30,
+            recommendedSets: 3,
+            recommendedReps: 15,
+          })),
+          days: ['Pazartesi', 'Salı', 'Perşembe', 'Cumartesi'],
+          frequency: 'Haftada 4 gün',
+        },
+        {
+          id: 'plan3',
+          name: 'Kuvvet ve Kas Geliştirme',
+          description: 'Kas kütlesini artırmak ve gücü geliştirmek için ideal program',
+          exercises: exerciseLibrary.filter(ex => ex.category === 'kuvvet').map(ex => ({
+            exerciseId: ex.id,
+            recommendedDuration: ex.duration || 30,
+            recommendedSets: 4,
+            recommendedReps: 10,
+            recommendedWeight: 5,
+          })),
+          days: ['Pazartesi', 'Çarşamba', 'Cuma'],
+          frequency: 'Haftada 3 gün',
+        },
+        {
+          id: 'plan4',
+          name: 'Esneklik ve Denge Programı',
+          description: 'Vücut esnekliğini artırmak ve dengeyi geliştirmek için',
+          exercises: [
+            ...exerciseLibrary.filter(ex => ex.category === 'esneklik'),
+            ...exerciseLibrary.filter(ex => ex.category === 'kuvvet').slice(0, 2)
+          ].map(ex => ({
+            exerciseId: ex.id,
+            recommendedDuration: ex.duration || 25,
+            recommendedSets: 3,
+            recommendedReps: 12,
+          })),
+          days: ['Salı', 'Perşembe', 'Pazar'],
+          frequency: 'Haftada 3 gün',
+        }
       ];
+
+  // Use default workout plans for development purposes    
+  const workoutPlansData = formatWorkoutPlans(defaultWorkoutPlans);
+  
+  // Original conditional loading
+  /*
+  const workoutPlansData = storeWorkoutPlans?.length > 0
+    ? formatWorkoutPlans(storeWorkoutPlans)
+    : formatWorkoutPlans(defaultWorkoutPlans);
+  */
 
   const workoutHistoryData = storeWorkoutSessions?.length > 0
     ? formatWorkoutSessions(storeWorkoutSessions)

@@ -535,7 +535,7 @@ const ProfileScreen: React.FunctionComponent<ProfileScreenProps> = () => {
 
             <TouchableOpacity
               style={styles.viewSleepDetailsButton}
-              onPress={() => navigation.navigate('MainTabs', { screen: 'SleepTracker' })}
+              onPress={() => navigation.navigate('SleepTracker')}
             >
               <Text style={styles.viewSleepDetailsText}>Uyku detaylarını görüntüle</Text>
               <FontAwesomeIcon icon={faChevronRight as IconProp} size={14} color="#4285F4" />

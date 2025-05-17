@@ -371,6 +371,11 @@ const HomeScreen: React.FunctionComponent<HomeScreenProps> = ({ navigation }) =>
     ? ['#272838', '#1E1E2E'] 
     : ['#4285F4', '#5C9CFF'];
 
+  // Tracker ve detay sayfalarına yönlendirmek için yardımcı fonksiyon
+  const navigateToTracker = (screen: string, params?: Record<string, any>) => {
+    navigation.navigate(screen as any, params);
+  };
+
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: themeAsAny.colors.background }]}>
       <ScrollView 
@@ -429,7 +434,7 @@ const HomeScreen: React.FunctionComponent<HomeScreenProps> = ({ navigation }) =>
             value={user.steps || 0}
             label="Adım"
             progress={stepsProgress}
-            onPress={() => navigation.navigate('StepTracker')}
+            onPress={() => navigateToTracker('StepTracker')}
           />
           <StatsCard
             backgroundColor={isDarkMode ? '#1E1E2E' : '#FFF8E1'}
@@ -438,7 +443,7 @@ const HomeScreen: React.FunctionComponent<HomeScreenProps> = ({ navigation }) =>
             value={user.calories || 0}
             label="Kalori"
             progress={caloriesProgress}
-            onPress={() => navigation.navigate('CalorieTracker')}
+            onPress={() => navigateToTracker('CalorieTracker')}
           />
         </View>
 
@@ -450,7 +455,7 @@ const HomeScreen: React.FunctionComponent<HomeScreenProps> = ({ navigation }) =>
             value={`${user.waterIntake || 0}L`}
             label="Su"
             progress={waterProgress}
-            onPress={() => navigation.navigate('WaterTracker')}
+            onPress={() => navigateToTracker('WaterTracker')}
           />
           <StatsCard
             backgroundColor={isDarkMode ? '#1E1E2E' : '#E8EAF6'}
@@ -460,7 +465,7 @@ const HomeScreen: React.FunctionComponent<HomeScreenProps> = ({ navigation }) =>
             label="Uyku"
             progress={sleepProgress}
             showDetails={false}
-            onPress={() => navigation.navigate('SleepTracker')}
+            onPress={() => navigateToTracker('SleepTracker')}
           />
         </View>
 
@@ -469,7 +474,7 @@ const HomeScreen: React.FunctionComponent<HomeScreenProps> = ({ navigation }) =>
           completedWorkouts={user.completedWorkouts || 0}
           totalWorkouts={user.totalWorkouts || 12}
           primaryColor={primaryColor}
-          onPress={() => navigation.navigate('ExerciseTracker')}
+          onPress={() => navigateToTracker('ExerciseTracker')}
         />
 
         {/* AI Health Advice - Daha modern kartlar */}
@@ -601,7 +606,7 @@ const HomeScreen: React.FunctionComponent<HomeScreenProps> = ({ navigation }) =>
           <Card.Actions style={styles.cardActions}>
             <Button
               mode="contained"
-              onPress={() => navigation.navigate('ExerciseTracker')}
+              onPress={() => navigateToTracker('ExerciseTracker')}
               style={[styles.actionButton, { 
                 backgroundColor: primaryColor,
                 shadowColor: primaryColor,
@@ -715,7 +720,7 @@ const HomeScreen: React.FunctionComponent<HomeScreenProps> = ({ navigation }) =>
           calories={user.calories || 0}
           caloriesGoal={user.caloriesGoal || 2500}
           primaryColor={primaryColor}
-          onPress={() => navigation.navigate('CalorieTracker')}
+          onPress={() => navigateToTracker('CalorieTracker')}
         />
       </ScrollView>
     </SafeAreaView>

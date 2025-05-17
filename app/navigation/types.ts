@@ -14,13 +14,8 @@ export type AuthStackParamList = {
 // Main tab navigation screens
 export type MainTabParamList = {
   Home: undefined;
-  WaterTracker: undefined;
-  CalorieTracker: undefined;
-  FoodTracker: undefined;
-  ExerciseTracker: undefined;
-  StepTracker: undefined;
-  SleepTracker: undefined;
   Profile: undefined;
+  Settings: undefined;
 };
 
 // Root stack navigator screens
@@ -37,6 +32,7 @@ export type RootStackParamList = {
   // Egzersiz ekranları
   ExerciseDetails: { exerciseId: string };
   AddWorkout: undefined;
+  ExerciseTracker: undefined;
   
   // Profil ekranları
   EditProfile: { userId?: string };
@@ -51,10 +47,15 @@ export type RootStackParamList = {
   NutritionGoals: undefined;
   FoodDetails: { foodId: string };
   AddFood: { mealType?: 'breakfast' | 'lunch' | 'dinner' | 'snack' };
+  FoodTracker: undefined;
+  CalorieTracker: undefined;
   
   // Diğer tracker ekranları
   SleepDetails: { sleepId?: string };
+  SleepTracker: undefined;
   WaterSettings: undefined;
+  WaterTracker: undefined;
+  StepTracker: undefined;
 };
 
 // Tüm navigasyon parametreleri için genel tip

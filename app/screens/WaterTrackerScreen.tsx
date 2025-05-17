@@ -40,10 +40,7 @@ import {
   faCalendarDay,
 } from '@fortawesome/free-solid-svg-icons';
 
-type WaterTrackerScreenNavigationProp = CompositeNavigationProp<
-  BottomTabNavigationProp<MainTabParamList, 'WaterTracker'>,
-  NativeStackNavigationProp<RootStackParamList>
->;
+type WaterTrackerScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'WaterTracker'>;
 
 type WaterTrackerScreenProps = {
   navigation: WaterTrackerScreenNavigationProp;
